@@ -1,0 +1,170 @@
+/* ====================== GIAO DIỆN CHỈNH SỬA + DANH SÁCH TIN ====================== */
+body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: #f4f6f9;
+    color: #333;
+    line-height: 1.6;
+}
+
+h2 {
+    font-size: 26px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #3498db;
+    display: inline-block;
+}
+
+/* --------------------- FORM CẬP NHẬT TIN --------------------- */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #2c3e50;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea {
+    width: 100%;
+    max-width: 600px;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: border 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Nút */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+/* --------------------- BẢNG TIN CỦA TÔI --------------------- */
+.table-container {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    margin-top: 30px;
+}
+
+.table-container h2 {
+    background: #3498db;
+    color: white;
+    padding: 15px 20px;
+    margin: 0;
+    font-size: 22px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    background: #3498db;
+    color: white;
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.table tr:hover {
+    background-color: #f8fbff;
+}
+
+/* Cột tiêu đề ngắn lại cho đẹp */
+.table .col-title   { width: 35%; }
+.table .col-price   { width: 15%; text-align: right; }
+.table .col-address { width: 20%; }
+.table .col-date    { width: 15%; }
+.table .col-action  { width: 15%; text-align: center; }
+
+/* Nút Sửa - Xóa nhỏ gọn */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    margin: 0 4px;
+}
+
+.btn-success {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-success:hover { background: #219a52; }
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover { background: #c0392b; }
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+    }
+    .table th, .table td {
+        font-size: 14px;
+        padding: 10px 8px;
+    }
+    .btn-sm {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+}

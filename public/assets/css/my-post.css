@@ -1,0 +1,83 @@
+/* assets/css/my-posts.css - HOÀN CHỈNH: Bảng đẹp + Nền xanh nhạt toàn trang */
+.my-posts {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 1em;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff !important;
+}
+
+.my-posts thead tr {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: #ffffff;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.my-posts th,
+.my-posts td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.my-posts tbody tr {
+    transition: all 0.3s ease;
+}
+
+.my-posts tbody tr:hover {
+    background-color: #f0f8ff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.my-posts tbody tr:nth-child(even) {
+    background-color: #fdfdfd;
+}
+
+.my-posts .btn {
+    display: inline-block;
+    padding: 8px 14px;
+    margin: 0 5px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: white;
+}
+
+.my-posts .btn { background: #28a745; }
+.my-posts .btn:hover { background: #218838; }
+.my-posts .btn-delete { background: #dc3545; }
+.my-posts .btn-delete:hover { background: #c82333; }
+
+/* ============== NỀN XANH NHẠT TOÀN TRANG - SIÊU MẠNH ============== */
+body,
+html,
+.main-content,
+.container,
+.wrapper,
+.content,
+.page,
+#content,
+[class*="content"],
+[class*="main"] {
+    background: #e3f2fd !important;
+    min-height: 100vh !important;
+}
+
+.main-content {
+    padding: 20px 15px !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .my-posts th,
+    .my-posts td { padding: 10px 8px; }
+    .my-posts .btn { padding: 6px 10px; font-size: 0.8em; }
+}

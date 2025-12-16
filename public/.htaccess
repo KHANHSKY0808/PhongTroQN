@@ -1,0 +1,24 @@
+# D:\XAMPP\HTDOCS\PHONGTROQN\public\.htaccess
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /PhongTroQN/public/
+
+    # Nếu là file hoặc thư mục thật tồn tại (css, js, ảnh, uploads) → cho truy cập bình thường
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Tất cả request còn lại → đẩy về index.php (Front Controller Pattern)
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Chặn liệt kê thư mục
+Options -Indexes
+
+# Chặn truy cập file .php trực tiếp (trừ index.php)
+<FilesMatch "\.php$">
+    <IfModule mod_rewrite.c>
+        RewriteCond %{REQUEST_FILENAME} !/public/index.php
+        RewriteRule .* - [F,L]
+    </IfModule>
+</FilesMatch>
