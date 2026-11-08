@@ -16,18 +16,20 @@ class MailHelper
         try {
             $mail = new PHPMailer(true);
 
-            // Cấu hình SMTP Gmail
+            // Cấu hình SMTP lấy từ biến môi trường
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            $mail->Host       = defined('SMTP_HOST') ? SMTP_HOST : env('SMTP_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'Phongtroqnu@gmail.com';
-            $mail->Password   = 'gnyw gzkh tqjm gxqi';  // App Password của bạn
-            $mail->SMTPSecure = 'tls';
-            $mail->Port       = 587;
+            $mail->Username   = defined('SMTP_USER') ? SMTP_USER : env('SMTP_USER', '');
+            $mail->Password   = defined('SMTP_PASS') ? SMTP_PASS : env('SMTP_PASS', '');
+            $mail->SMTPSecure = defined('SMTP_SECURE') ? SMTP_SECURE : env('SMTP_SECURE', 'tls');
+            $mail->Port       = defined('SMTP_PORT') ? SMTP_PORT : (int)env('SMTP_PORT', 587);
             $mail->CharSet    = 'UTF-8';
 
             // Người gửi
-            $mail->setFrom('Phongtroqnu@gmail.com', 'PhongTroQN');
+            $fromEmail = defined('SMTP_FROM_ADDRESS') ? SMTP_FROM_ADDRESS : env('SMTP_FROM_ADDRESS', 'phongtroqn@localhost');
+            $fromName  = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : env('SMTP_FROM_NAME', 'PhongTroQN');
+            $mail->setFrom($fromEmail, $fromName);
 
             // Người nhận
             $mail->addAddress($email);

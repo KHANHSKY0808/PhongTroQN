@@ -1,8 +1,10 @@
 /vendor/
 .env
+.env.*
+!.env.example
+.evn
 /storage/logs/
 /storage/cache/
 /public/uploads/
 *.log
-*.sql
-
+*.sqlite

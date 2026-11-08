@@ -3,11 +3,12 @@
 // PHIÊN BẢN CUỐI CÙNG – ĐÃ TEST 100% KHÔNG LỖI
 
 
-// =================== 0. Thư Viện Mail ================
-require_once __DIR__ . '/Helpers/MailHelpers.php';
-
-// ==================== 1. CẤU HÌNH ====================
+// ==================== 1. CẤU HÌNH & MÔI TRƯỜNG ====================
 require_once __DIR__ . '/../config/config.php';
+
+// =================== 2. THƯ VIỆN & HELPER ================
+require_once __DIR__ . '/Helpers/Env.php';
+require_once __DIR__ . '/Helpers/MailHelpers.php';
 
 
 // ==================== 2. KẾT NỐI DB ====================
