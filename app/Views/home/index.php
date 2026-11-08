@@ -57,12 +57,16 @@ require_once __DIR__ . '/../partials/header.php';
 }
 </style>
 
-<!-- Hiển thị thông báo thành công -->
-<?php if (isset($_SESSION['success_message'])): ?>
-  <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 6px; margin: 20px auto; max-width: 1200px; border: 1px solid #c3e6cb;">
-    ✓ <?= htmlspecialchars($_SESSION['success_message']) ?>
+<!-- Hiển thị thông báo flash -->
+<?php if ($successMsg = getFlash('success')): ?>
+  <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 6px; margin: 20px auto; max-width: 1200px; border: 1px solid #c3e6cb; font-weight: 500;">
+    ✓ <?= htmlspecialchars($successMsg) ?>
   </div>
-  <?php unset($_SESSION['success_message']); ?>
+<?php endif; ?>
+<?php if ($errorMsg = getFlash('error')): ?>
+  <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 6px; margin: 20px auto; max-width: 1200px; border: 1px solid #f5c6cb; font-weight: 500;">
+    ⚠️ <?= htmlspecialchars($errorMsg) ?>
+  </div>
 <?php endif; ?>
 
 <!-- Header info -->

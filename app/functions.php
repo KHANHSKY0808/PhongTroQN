@@ -15,6 +15,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/Helpers/Env.php';
 require_once __DIR__ . '/Helpers/Auth.php';
 require_once __DIR__ . '/Helpers/Csrf.php';
+require_once __DIR__ . '/Helpers/Validator.php';
 require_once __DIR__ . '/Helpers/MailHelpers.php';
 
 
@@ -43,6 +44,29 @@ function view($path, $data = []) {
 function redirect($url = '') {
     header('Location: ' . BASE_URL . $url);
     exit;
+}
+
+function setFlash(string $key, string $message): void {
+    $_SESSION['flash_' . $key] = $message;
+}
+
+function getFlash(string $key): ?string {
+    $fullKey = 'flash_' . $key;
+    if (isset($_SESSION[$fullKey])) {
+        $msg = $_SESSION[$fullKey];
+        unset($_SESSION[$fullKey]);
+        return $msg;
+    }
+    if (isset($_SESSION[$key])) {
+        $msg = $_SESSION[$key];
+        unset($_SESSION[$key]);
+        return $msg;
+    }
+    return null;
+}
+
+function hasFlash(string $key): bool {
+    return isset($_SESSION['flash_' . $key]) || isset($_SESSION[$key]);
 }
 
 function upload($file, $subfolder = 'posts') {

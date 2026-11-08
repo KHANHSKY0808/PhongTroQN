@@ -1,6 +1,5 @@
 <?php
-// Nếu vừa submit thành công
-$justPosted = isset($_SESSION['success']);
+// app/Views/post/DangTin.php
 ?>
 
 <!DOCTYPE html>
@@ -44,12 +43,21 @@ $justPosted = isset($_SESSION['success']);
             z-index: 9999;
             font-weight: bold;
         }
+        .error-alert {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 18px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
-    <?php if($justPosted): ?>
+    <?php if ($successMsg = getFlash('success')): ?>
         <div class="success-popup">
-            <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+            <?= htmlspecialchars($successMsg) ?>
         </div>
         <script>
             setTimeout(function(){
@@ -66,9 +74,9 @@ $justPosted = isset($_SESSION['success']);
                 <div class="user-profile">
                     <div class="user-avatar"></div>
                     <div class="user-details">
-                        <p class="user-name"><?= isset($_SESSION['user']) ? htmlspecialchars($_SESSION['user']['HoTen']) : 'Khách' ?></p>
-                        <p class="user-phone"><?= isset($_SESSION['user']) ? htmlspecialchars($_SESSION['user']['SoDienThoai']) : '' ?></p>
-                        <p class="user-account-id">Mã tài khoản: <?= isset($_SESSION['user']) ? htmlspecialchars($_SESSION['user']['UserID']) : '' ?></p>
+                        <p class="user-name"><?= Auth::check() ? htmlspecialchars(Auth::user()['HoTen'] ?? 'Thành viên') : 'Khách' ?></p>
+                        <p class="user-phone"><?= Auth::check() ? htmlspecialchars(Auth::user()['SoDienThoai'] ?? '') : '' ?></p>
+                        <p class="user-account-id">Mã tài khoản: <?= Auth::check() ? htmlspecialchars((string)Auth::id()) : '' ?></p>
                     </div>
                 </div>
 
@@ -92,6 +100,12 @@ $justPosted = isset($_SESSION['success']);
 
         <!-- CONTENT -->
         <div class="content-area">
+            <?php if ($errorMsg = getFlash('error')): ?>
+                <div class="error-alert">
+                    ⚠️ <?= htmlspecialchars($errorMsg) ?>
+                </div>
+            <?php endif; ?>
+
             <form method="POST" action="<?= BASE_URL ?>/dang-tin/luu" enctype="multipart/form-data">
                 <?= csrf_field() ?>
 

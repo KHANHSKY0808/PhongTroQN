@@ -19,18 +19,36 @@ class PostController
 
         $userID = Auth::id();
 
+        // 1. Validate dữ liệu đầu vào bằng Validator tập trung
+        $validator = Validator::make($_POST, [
+            'title'      => 'required|min_len:10|max_len:255',
+            'diachi'     => 'required|min_len:5|max_len:255',
+            'gia'        => 'required|numeric|min:100000|max:100000000',
+            'dientich'   => 'required|numeric|min:5|max:500',
+            'mota'       => 'max_len:5000',
+            'latitude'   => 'latitude',
+            'longitude'  => 'longitude',
+            'video_link' => 'video_url',
+        ]);
+
+        if ($validator->fails()) {
+            setFlash('error', $validator->firstError());
+            redirect('/dang-tin');
+            return;
+        }
+
         $post = new Post();
 
         // Tạo bài đăng
         $postID = $post->create([
             'UserID'    => $userID,
-            'TieuDe'    => $_POST['title'],
-            'MoTa'      => $_POST['mota'] ?? "",
-            'DiaChi'    => $_POST['diachi'],
-            'DienTich'  => $_POST['dientich'],
-            'GiaPhong'  => $_POST['gia'],
-            'Latitude'  => !empty($_POST['latitude']) ? $_POST['latitude'] : null,
-            'Longitude' => !empty($_POST['longitude']) ? $_POST['longitude'] : null
+            'TieuDe'    => trim($_POST['title']),
+            'MoTa'      => trim($_POST['mota'] ?? ""),
+            'DiaChi'    => trim($_POST['diachi']),
+            'DienTich'  => (float)$_POST['dientich'],
+            'GiaPhong'  => (float)$_POST['gia'],
+            'Latitude'  => !empty($_POST['latitude']) ? (float)$_POST['latitude'] : null,
+            'Longitude' => !empty($_POST['longitude']) ? (float)$_POST['longitude'] : null
         ]);
 
         // ===== Upload ảnh =====
@@ -65,11 +83,12 @@ class PostController
 
         // ===== Video link (Youtube/TikTok) =====
         if (!empty($_POST['video_link'])) {
-            $post->updateVideo($postID, $_POST['video_link']);
+            $post->updateVideo($postID, trim($_POST['video_link']));
         }
 
-        // Hiển thị thông báo thành công và quay về trang chủ
-        echo "<script>alert('Đăng tin thành công!'); window.location.href='" . BASE_URL . "/';</script>";
+        // Thông báo thành công và chuyển về trang chủ
+        setFlash('success', 'Đăng tin thành công! Tin của bạn đã hiển thị.');
+        redirect('/');
         exit;
     }
 	public function myPosts()
@@ -112,7 +131,7 @@ public function update()
     Auth::requireLogin();
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['PostID'])) {
-        $_SESSION['error'] = "Dữ liệu không hợp lệ.";
+        setFlash('error', "Dữ liệu không hợp lệ.");
         redirect('/tin-cua-toi');
         exit;
     }
@@ -124,28 +143,43 @@ public function update()
     $post = $postModel->getPostById($postID);
 
     if (!$post) {
-        $_SESSION['error'] = "Tin đăng không tồn tại!";
+        setFlash('error', "Tin đăng không tồn tại!");
         redirect('/tin-cua-toi');
         exit;
     }
 
     // Chống IDOR: Chỉ chủ tin hoặc Admin mới được sửa
     if ($post['UserID'] != $userID && !Auth::isAdmin()) {
-        $_SESSION['error'] = "Bạn không có quyền sửa tin này!";
+        setFlash('error', "Bạn không có quyền sửa tin này!");
         redirect('/tin-cua-toi');
+        exit;
+    }
+
+    // Validate dữ liệu cập nhật
+    $validator = Validator::make($_POST, [
+        'TieuDe'   => 'required|min_len:10|max_len:255',
+        'DiaChi'   => 'required|min_len:5|max_len:255',
+        'GiaPhong' => 'required|numeric|min:100000|max:100000000',
+        'DienTich' => 'required|numeric|min:5|max:500',
+        'MoTa'     => 'max_len:5000',
+    ]);
+
+    if ($validator->fails()) {
+        setFlash('error', $validator->firstError());
+        redirect('/sua-tin/' . $postID);
         exit;
     }
 
     $postModel->updatePost([
         'PostID'   => $postID,
-        'TieuDe'   => trim($_POST['TieuDe'] ?? ''),
+        'TieuDe'   => trim($_POST['TieuDe']),
         'MoTa'     => trim($_POST['MoTa'] ?? ''),
-        'DiaChi'   => trim($_POST['DiaChi'] ?? ''),
-        'DienTich' => floatval($_POST['DienTich'] ?? 0),
-        'GiaPhong' => floatval($_POST['GiaPhong'] ?? 0)
+        'DiaChi'   => trim($_POST['DiaChi']),
+        'DienTich' => (float)$_POST['DienTich'],
+        'GiaPhong' => (float)$_POST['GiaPhong']
     ]);
 
-    $_SESSION['success'] = "Cập nhật tin thành công!";
+    setFlash('success', "Cập nhật tin thành công!");
     redirect('/tin-cua-toi?updated=1');
 }
 

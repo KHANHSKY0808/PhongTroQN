@@ -13,6 +13,18 @@ if (!isset($posts)) $posts = [];
     </a>
 </div>
 
+<?php if ($successMsg = getFlash('success')): ?>
+    <div style="background: #d4edda; color: #155724; padding: 12px 18px; border-radius: 6px; margin: 15px 0; border: 1px solid #c3e6cb; font-weight: 500;">
+        ✓ <?= htmlspecialchars($successMsg) ?>
+    </div>
+<?php endif; ?>
+
+<?php if ($errorMsg = getFlash('error')): ?>
+    <div style="background: #f8d7da; color: #721c24; padding: 12px 18px; border-radius: 6px; margin: 15px 0; border: 1px solid #f5c6cb; font-weight: 500;">
+        ⚠️ <?= htmlspecialchars($errorMsg) ?>
+    </div>
+<?php endif; ?>
+
 <?php if (empty($posts)): ?>
     <div style="text-align:center; padding:50px 20px; background:#f8f9fa; border-radius:8px; margin:20px 0;">
         <p style="font-size:1.2em; color:#666;">Bạn chưa đăng tin nào.</p>

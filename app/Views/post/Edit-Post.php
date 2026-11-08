@@ -9,6 +9,12 @@ if (empty($post)) {
 <link rel="stylesheet" href="<?= ASSETS_URL ?>/css/edit-post.css?v=<?= time() ?>">
 <h2>Cập nhật tin đăng</h2>
 
+<?php if ($errorMsg = getFlash('error')): ?>
+    <div style="background: #f8d7da; color: #721c24; padding: 12px 18px; border-radius: 6px; margin: 15px 0; border: 1px solid #f5c6cb; font-weight: 500;">
+        ⚠️ <?= htmlspecialchars($errorMsg) ?>
+    </div>
+<?php endif; ?>
+
 <form method="POST" action="<?= BASE_URL ?>/cap-nhat-tin" enctype="multipart/form-data">
     <?= csrf_field() ?>
     <input type="hidden" name="PostID" value="<?= $post['PostID'] ?>">
