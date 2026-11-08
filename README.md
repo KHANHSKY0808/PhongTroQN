@@ -255,3 +255,4 @@ PhongTroQN/
 ## 📜 Giấy Phép & Bản Quyền
 
 Dự án được xây dựng và phát triển phục vụ mục đích học tập, nghiên cứu và đưa vào hồ sơ ứng tuyển vị trí Backend / Fullstack Developer. Mọi đóng góp và mã nguồn được chia sẻ theo giấy phép MIT.
+

@@ -97,3 +97,4 @@ class ValidatorTest extends TestCase
         $this->assertTrue($vEmailInvalid->fails());
     }
 }
+

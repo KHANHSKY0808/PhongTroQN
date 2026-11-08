@@ -96,3 +96,4 @@ if (!function_exists('csrf_field')) {
         return Csrf::field();
     }
 }
+

@@ -38,3 +38,4 @@ class CsrfTest extends TestCase
         $this->assertFalse(Csrf::validate(''));
     }
 }
+

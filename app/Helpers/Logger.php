@@ -42,3 +42,4 @@ class Logger
         self::log('ERROR', $message, $context);
     }
 }
+

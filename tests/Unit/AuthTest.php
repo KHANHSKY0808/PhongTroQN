@@ -70,3 +70,4 @@ class AuthTest extends TestCase
         $this->assertNull(Auth::user());
     }
 }
+

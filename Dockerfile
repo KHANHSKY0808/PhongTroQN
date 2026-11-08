@@ -54,3 +54,4 @@ RUN mkdir -p /var/www/html/storage/logs /var/www/html/public/uploads \
 EXPOSE 80
 
 CMD ["apache2-foreground"]
+

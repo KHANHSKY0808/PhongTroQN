@@ -39,3 +39,4 @@ class HelperFunctionsTest extends TestCase
         $this->assertFalse(hasFlash('test_key'));
     }
 }
+

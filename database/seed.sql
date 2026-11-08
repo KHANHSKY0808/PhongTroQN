@@ -61,3 +61,4 @@ INSERT INTO `favorites` (`FavoriteID`, `UserID`, `PostID`, `NgayLuu`) VALUES
 -- 7. SEED BAO CAO VI PHAM
 INSERT INTO `baocao` (`BaoCaoID`, `UserID`, `PostID`, `NoiDung`, `NgayBaoCao`, `DaXuLy`) VALUES
 (1, 3, 4, 'Tin đăng ghi còn phòng nhưng khi gọi điện chủ báo đã cho thuê tuần trước.', NOW() - INTERVAL 1 DAY, 0);
+

@@ -94,3 +94,4 @@ Toàn bộ các thay đổi kỹ thuật quan trọng của dự án **PhongTroQ
   - `docker-compose.yml`: thiết lập 3 services gồm `app` (PHP 8.2), `db` (MySQL 8.0 tự nạp schema và seed data), `phpmyadmin` (GUI quản lý).
 - **CI Pipeline**:
   - `.github/workflows/ci.yml`: tự động hóa quy trình kiểm thử với ma trận PHP (8.0, 8.1, 8.2), kiểm tra cú pháp PHP toàn dự án (`php -l`), kiểm tra tính hợp lệ của composer và chạy PHPUnit test suite trên mỗi commit.
+

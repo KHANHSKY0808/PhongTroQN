@@ -100,3 +100,4 @@ CREATE TABLE `baocao` (
     CONSTRAINT `fk_baocao_post` FOREIGN KEY (`PostID`) REFERENCES `post` (`PostID`) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX `idx_baocao_status` (`DaXuLy`, `NgayBaoCao`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

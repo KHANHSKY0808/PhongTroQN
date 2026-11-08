@@ -24,3 +24,4 @@
 
 # Chặn duyệt danh mục file và chặn thực thi CGI
 Options -Indexes -ExecCGI
+
