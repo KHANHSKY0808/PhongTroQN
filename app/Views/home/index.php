@@ -351,7 +351,8 @@ document.querySelectorAll('.heart-btn').forEach(btn => {
         fetch("<?= BASE_URL ?>/api/favorite/toggle", {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRF-Token": "<?= csrf_token() ?>"
             },
             body: "post_id=" + postID
         })
@@ -530,6 +531,7 @@ document.querySelectorAll('.heart-btn').forEach(btn => {
         <p>Tin đăng: <strong id="reportPostTitle"></strong></p>
         
         <form method="POST" action="<?= BASE_URL ?>/index.php?page=bao-cao" id="reportForm">
+            <?= csrf_field() ?>
             <input type="hidden" id="reportPostID" name="postID">
             
             <label for="reportReason">Lý do báo cáo *</label>

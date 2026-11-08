@@ -227,6 +227,7 @@ $recentPosts = query("SELECT p.PostID, p.TieuDe, u.HoTen, p.NgayDang
     // Định nghĩa biến global từ PHP
     const BASE_URL = '<?= BASE_URL ?>';
     const ASSETS_URL = '<?= ASSETS_URL ?>';
+    const CSRF_TOKEN = '<?= csrf_token() ?>';
 </script>
 <script src="<?= ASSETS_URL ?>/js/admin-dashboard.js"></script>
 </body>

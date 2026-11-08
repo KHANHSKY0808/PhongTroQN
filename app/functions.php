@@ -9,6 +9,7 @@ require_once __DIR__ . '/../config/config.php';
 // =================== 2. THƯ VIỆN & HELPER ================
 require_once __DIR__ . '/Helpers/Env.php';
 require_once __DIR__ . '/Helpers/Auth.php';
+require_once __DIR__ . '/Helpers/Csrf.php';
 require_once __DIR__ . '/Helpers/MailHelpers.php';
 
 
@@ -123,6 +124,9 @@ function e($string) {
 }
 
 // ==================== 5. ROUTING – PHIÊN BẢN HOÀN CHỈNH KHÔNG BAO GIỜ BỊ 404 KHI VÀO TRANG CHỦ ====================
+// Bảo vệ CSRF cho toàn bộ request POST / PUT / DELETE
+Csrf::verifyOrAbort();
+
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 // Xóa phần /PhongTroQN/public (và cả index.php nếu có)

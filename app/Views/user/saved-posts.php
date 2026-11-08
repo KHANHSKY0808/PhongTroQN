@@ -259,7 +259,10 @@ document.getElementById('confirmDelete').addEventListener('click', () => {
 
     fetch('<?= BASE_URL ?>/api/favorite/toggle', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': '<?= csrf_token() ?>'
+        },
         body: 'post_id=' + postIdToRemove
     })
     .then(r => r.json())

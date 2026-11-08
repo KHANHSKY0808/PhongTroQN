@@ -143,6 +143,7 @@ if (isset($_SESSION['error'])) {
             <!-- 1. Cập nhật họ tên -->
             <div id="info" class="form-section <?= $current_tab === 'info' ? 'active' : '' ?>">
                 <form action="<?= BASE_URL ?>/tai-khoan/cap-nhat" method="POST">
+                    <?= csrf_field() ?>
                     <div class="header">
                         <div class="avatar-name">
                             <div class="avatar">
@@ -183,6 +184,7 @@ if (isset($_SESSION['error'])) {
             <!-- 2. Đổi số điện thoại -->
         <div id="phone" class="form-section <?= $current_tab === 'phone' ? 'active' : '' ?>">
             <form id="changePhoneForm" action="<?= BASE_URL ?>/tai-khoan/doi-sdt" method="POST">
+                <?= csrf_field() ?>
                 <div class="change-phone-header">Thay đổi số điện thoại</div>
                 
                 <div class="form-group">
@@ -212,6 +214,7 @@ if (isset($_SESSION['error'])) {
             <!-- 3. Đổi mật khẩu -->
             <div id="password" class="form-section <?= $current_tab === 'password' ? 'active' : '' ?>">
                 <form action="<?= BASE_URL ?>/tai-khoan/doi-mat-khau" method="POST">
+                    <?= csrf_field() ?>
                     <div class="change-phone-header">Thay đổi mật khẩu</div>
                     <div class="form-group">
                         <label class="label">Mật khẩu cũ</label>
@@ -272,7 +275,8 @@ function sendOTP() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': '<?= csrf_token() ?>'
         },
         body: 'new_phone=' + encodeURIComponent(newPhone)
     })

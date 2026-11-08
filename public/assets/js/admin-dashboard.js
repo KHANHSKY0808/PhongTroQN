@@ -109,7 +109,10 @@ document.getElementById('confirmDelete').onclick = () => {
 
   fetch(`${BASE_URL}/admin/delete-post`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRF-Token': (typeof CSRF_TOKEN !== 'undefined' ? CSRF_TOKEN : '')
+    },
     body: 'id=' + postIdToDelete
   })
   .then(r => r.json())

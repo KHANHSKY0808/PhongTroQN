@@ -20,6 +20,7 @@
     <?php endif; ?>
 
     <form action="<?= BASE_URL ?>/dang-nhap" method="POST">
+        <?= csrf_field() ?>
         <div class="input_wrapper">
             <input type="text" name="email" class="input_field" required>
             <label class="label">Email</label>

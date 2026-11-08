@@ -93,6 +93,7 @@ $justPosted = isset($_SESSION['success']);
         <!-- CONTENT -->
         <div class="content-area">
             <form method="POST" action="<?= BASE_URL ?>/dang-tin/luu" enctype="multipart/form-data">
+                <?= csrf_field() ?>
 
                 <!-- THÔNG TIN MÔ TẢ -->
                 <div class="card">

@@ -23,6 +23,7 @@
         <?php endif; ?>
 
         <form action="<?= BASE_URL ?>/dang-ky" method="POST">
+            <?= csrf_field() ?>
             <div class="text-warpper"><input type="text" name="hoten" placeholder="Họ và tên" required></div>
             <div class="text-warpper"><input type="email" name="email" placeholder="Email" required></div>
             <div class="text-warpper"><input type="password" name="pass" placeholder="Mật khẩu" required></div>

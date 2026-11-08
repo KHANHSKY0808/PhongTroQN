@@ -26,6 +26,7 @@ if (!$post || $post['UserID'] != $userID) {
 <h2>Cập nhật tin đăng</h2>
 
 <form method="POST" action="<?= BASE_URL ?>/cap-nhat-tin" enctype="multipart/form-data">
+    <?= csrf_field() ?>
     <input type="hidden" name="PostID" value="<?= $post['PostID'] ?>">
 
     <div class="form-group">
