@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Ứng dụng PhongTroQN (PHP 8.2 + Apache)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phongtroqn_app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      BASE_URL: "http://localhost:8080"
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: phongtroqn
+      DB_USER: phongtro_user
+      DB_PASS: secret123
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - phongtroqn_network
+
+  # Cơ sở dữ liệu MySQL 8.0 (Tự động nạp schema.sql & seed.sql khi khởi chạy)
+  db:
+    image: mysql:8.0
+    container_name: phongtroqn_db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secret_password
+      MYSQL_DATABASE: phongtroqn
+      MYSQL_USER: phongtro_user
+      MYSQL_PASSWORD: secret123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "phongtro_user", "-psecret123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - phongtroqn_network
+
+  # Giao diện quản lý Database phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phongtroqn_pma
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root_secret_password
+      UPLOAD_LIMIT: 50M
+    depends_on:
+      - db
+    networks:
+      - phongtroqn_network
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  phongtroqn_network:
+    driver: bridge

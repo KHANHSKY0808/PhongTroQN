@@ -1,0 +1,10 @@
+.git
+.github
+vendor
+.env
+.env.*
+!.env.example
+storage/logs/*.log
+.phpunit.result.cache
+composer.phar
+*.sqlite
