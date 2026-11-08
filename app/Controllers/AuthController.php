@@ -73,6 +73,14 @@ class AuthController
             redirect(Auth::isAdmin() ? '/index.php?page=admin' : '/');
         }
 
+        // Rate limit: Kiểm tra trạng thái khóa tạm thời
+        $lockUntil = $_SESSION['login_locked_until'] ?? 0;
+        if (time() < $lockUntil) {
+            $wait = $lockUntil - time();
+            $_SESSION['error'] = "Bạn đã thử đăng nhập sai quá nhiều lần. Vui lòng chờ {$wait} giây!";
+            return view('auth/login');
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim($_POST['email'] ?? '');
             $pass  = $_POST['pass'] ?? '';
@@ -83,6 +91,9 @@ class AuthController
                 $user = $this->userModel->findByEmail($email);
 
                 if ($user && password_verify($pass, $user['MatKhau'])) {
+                    // Reset bộ đếm đăng nhập sai
+                    unset($_SESSION['login_fail_attempts'], $_SESSION['login_locked_until']);
+
                     // Thiết lập phiên đăng nhập đồng bộ
                     Auth::login($user);
 
@@ -99,7 +110,17 @@ class AuthController
                     }
                     exit;
                 } else {
-                    $_SESSION['error'] = "Email hoặc mật khẩu không đúng!";
+                    $attempts = ($_SESSION['login_fail_attempts'] ?? 0) + 1;
+                    $_SESSION['login_fail_attempts'] = $attempts;
+
+                    if ($attempts >= 5) {
+                        $_SESSION['login_locked_until'] = time() + 60; // Khóa 60 giây
+                        $_SESSION['login_fail_attempts'] = 0;
+                        $_SESSION['error'] = "Bạn đã nhập sai 5 lần liên tiếp. Vui lòng thử lại sau 60 giây!";
+                    } else {
+                        $remaining = 5 - $attempts;
+                        $_SESSION['error'] = "Email hoặc mật khẩu không đúng! Còn {$remaining} lần thử.";
+                    }
                 }
             }
         }

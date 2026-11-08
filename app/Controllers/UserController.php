@@ -119,10 +119,21 @@ class UserController
             exit;
         }
 
-        $otp = rand(100000, 999999);
-        $_SESSION['otp_phone']   = $otp;
-        $_SESSION['otp_expire']  = time() + 180;
-        $_SESSION['phone_pending'] = $newPhone;
+        // Rate limit: Mỗi lần gửi cách nhau ít nhất 60 giây
+        $lastSent = $_SESSION['otp_last_sent'] ?? 0;
+        if (time() - $lastSent < 60) {
+            $wait = 60 - (time() - $lastSent);
+            echo json_encode(['success' => false, 'message' => "Vui lòng chờ {$wait} giây trước khi yêu cầu mã OTP mới!"]);
+            exit;
+        }
+
+        // Sinh OTP ngẫu nhiên an toàn bằng random_int và lưu dạng hash
+        $otp = (string)random_int(100000, 999999);
+        $_SESSION['otp_phone_hash']  = password_hash($otp, PASSWORD_DEFAULT);
+        $_SESSION['otp_expire']      = time() + 180; // Hiệu lực 3 phút
+        $_SESSION['phone_pending']   = $newPhone;
+        $_SESSION['otp_attempts']    = 0; // Bộ đếm số lần nhập sai
+        $_SESSION['otp_last_sent']   = time();
 
         $email = $user['Email'] ?? '';
 
@@ -162,23 +173,43 @@ class UserController
             redirect('/tai-khoan?tab=phone');
         }
 
-        if (!isset($_SESSION['otp_phone']) || !isset($_SESSION['otp_expire'])) {
+        // 1. Kiểm tra session OTP
+        if (!isset($_SESSION['otp_phone_hash']) || !isset($_SESSION['otp_expire'])) {
             $_SESSION['error'] = "Bạn chưa yêu cầu mã OTP!";
             redirect('/tai-khoan?tab=phone');
         }
+
+        // 2. Kiểm tra thời hạn OTP
         if (time() > $_SESSION['otp_expire']) {
-            unset($_SESSION['otp_phone'], $_SESSION['otp_expire'], $_SESSION['phone_pending']);
-            $_SESSION['error'] = "Mã OTP đã hết hạn!";
+            unset($_SESSION['otp_phone_hash'], $_SESSION['otp_expire'], $_SESSION['phone_pending'], $_SESSION['otp_attempts']);
+            $_SESSION['error'] = "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới!";
             redirect('/tai-khoan?tab=phone');
         }
-        if ($otp != $_SESSION['otp_phone']) {
-            $_SESSION['error'] = "Mã OTP không chính xác!";
+
+        // 3. Kiểm tra số điện thoại có đúng với số đã xin OTP không (chống bypass phone number)
+        if ($newPhone !== ($_SESSION['phone_pending'] ?? '')) {
+            $_SESSION['error'] = "Số điện thoại không khớp với số đã yêu cầu mã OTP!";
+            redirect('/tai-khoan?tab=phone');
+        }
+
+        // 4. Rate limit số lần nhập sai (tối đa 5 lần)
+        $_SESSION['otp_attempts'] = ($_SESSION['otp_attempts'] ?? 0) + 1;
+        if ($_SESSION['otp_attempts'] > 5) {
+            unset($_SESSION['otp_phone_hash'], $_SESSION['otp_expire'], $_SESSION['phone_pending'], $_SESSION['otp_attempts']);
+            $_SESSION['error'] = "Bạn đã nhập sai mã OTP quá 5 lần. Vui lòng lấy mã mới!";
+            redirect('/tai-khoan?tab=phone');
+        }
+
+        // 5. Đối chiếu mã OTP qua password_verify
+        if (!password_verify($otp, $_SESSION['otp_phone_hash'])) {
+            $remaining = 5 - $_SESSION['otp_attempts'];
+            $_SESSION['error'] = "Mã OTP không chính xác! Bạn còn {$remaining} lần thử.";
             redirect('/tai-khoan?tab=phone');
         }
 
         if ($this->model()->updatePhone($userId, $newPhone)) {
             Auth::updateUser(['SoDienThoai' => $newPhone]);
-            unset($_SESSION['otp_phone'], $_SESSION['otp_expire'], $_SESSION['phone_pending']);
+            unset($_SESSION['otp_phone_hash'], $_SESSION['otp_expire'], $_SESSION['phone_pending'], $_SESSION['otp_attempts'], $_SESSION['otp_last_sent']);
             $_SESSION['success'] = "Đổi số điện thoại thành công!";
         } else {
             $_SESSION['error'] = "Cập nhật thất bại. Vui lòng thử lại!";
