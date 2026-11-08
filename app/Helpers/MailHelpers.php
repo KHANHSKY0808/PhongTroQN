@@ -1,10 +1,5 @@
 <?php
-// app/Helpers/MailHelper.php
-
-// ĐƯỜNG DẪN CHÍNH XÁC KHI PHPMailer-master NẰM CÙNG THƯ MỤC
-require_once __DIR__ . '/PHPMailer-master/src/Exception.php';
-require_once __DIR__ . '/PHPMailer-master/src/PHPMailer.php';
-require_once __DIR__ . '/PHPMailer-master/src/SMTP.php';
+// app/Helpers/MailHelpers.php
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

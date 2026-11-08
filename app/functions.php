@@ -3,6 +3,11 @@
 // PHIÊN BẢN CUỐI CÙNG – ĐÃ TEST 100% KHÔNG LỖI
 
 
+// ==================== 0. COMPOSER AUTOLOADER ====================
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
 // ==================== 1. CẤU HÌNH & MÔI TRƯỜNG ====================
 require_once __DIR__ . '/../config/config.php';
 
