@@ -9,8 +9,8 @@ class HomeController
         $totalPosts = $postModel->countActivePosts();
 
         $favoriteModel = new Favorite();
-        if (isset($_SESSION['user_id'])) {
-            $userID = $_SESSION['user_id'];
+        if (Auth::check()) {
+            $userID = Auth::id();
             foreach ($posts as &$p) {
                 $p['is_favorited'] = $favoriteModel->isFavorited($userID, $p['PostID']);
             }
@@ -189,8 +189,8 @@ class HomeController
             : "Không tìm thấy tin nào phù hợp";
 
         $favoriteModel = new Favorite();
-        if (isset($_SESSION['user_id'])) {
-            $userID = $_SESSION['user_id'];
+        if (Auth::check()) {
+            $userID = Auth::id();
             foreach ($filteredPosts as &$p) {
                 $p['is_favorited'] = $favoriteModel->isFavorited($userID, $p['PostID']);
             }

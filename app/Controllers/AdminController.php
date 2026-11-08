@@ -6,11 +6,8 @@ class AdminController
      * ================================================================== */
     public function index()
     {
-        // Kiểm tra đăng nhập + quyền admin
-        if (!isset($_SESSION['user_id']) || $_SESSION['is_admin'] != 1) {
-            redirect('/');
-            exit;
-        }
+        // Kiểm tra đăng nhập + quyền admin qua Auth helper
+        Auth::requireAdmin();
 
         // Lấy dữ liệu thống kê và tin mới nhất
         require_once __DIR__ . '/../Models/DB.php';
@@ -50,10 +47,7 @@ class AdminController
     public function manageReports()
     {
         // ────── KIỂM TRA QUYỀN ADMIN ──────
-        if (!isset($_SESSION['user_id']) || $_SESSION['is_admin'] != 1) {
-            redirect('/');
-            exit;
-        }
+        Auth::requireAdmin();
 
         // ────── LẤY THAM SỐ HÀNH ĐỘNG ──────
         $action   = $_GET['action'] ?? null;   // resolve | delete | delete_user | delete_post
@@ -153,17 +147,14 @@ class AdminController
     public function users()
     {
         // Kiểm tra quyền admin
-        if (!isset($_SESSION['user_id']) || $_SESSION['is_admin'] != 1) {
-            redirect('/');
-            exit;
-        }
+        Auth::requireAdmin();
 
         // ────── XỬ LÝ XÓA NGƯỜI DÙNG ──────
         if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
             $userId = (int)$_GET['id'];
 
             // Bảo vệ: không cho xóa chính mình hoặc admin gốc (ID = 1)
-            if ($userId === $_SESSION['user_id'] || $userId === 1) {
+            if ($userId === Auth::id() || $userId === 1) {
                 redirect('/index.php?page=admin/users&error=protected');
                 exit;
             }
@@ -196,9 +187,7 @@ class AdminController
     public function deletePost()
     {
         // Chỉ chấp nhận POST + phải là admin
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST'
-            || !isset($_SESSION['user_id'])
-            || $_SESSION['is_admin'] != 1) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Auth::isAdmin()) {
             header('HTTP/1.1 403 Forbidden');
             echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
             exit;

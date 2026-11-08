@@ -9,31 +9,27 @@ class FavoriteController {
 
     // AJAX: Lưu / bỏ lưu tin
     public function toggle() {
-        if (!isset($_SESSION['user_id'])) {
+        if (!Auth::check()) {
             echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập']);
             exit;
         }
 
-        $postID = $_POST['post_id'] ?? 0;
+        $postID = (int)($_POST['post_id'] ?? 0);
         if (!$postID) {
             echo json_encode(['success' => false, 'message' => 'Thiếu ID tin']);
             exit;
         }
 
-        $result = $this->favoriteModel->toggle($_SESSION['user_id'], $postID);
+        $result = $this->favoriteModel->toggle(Auth::id(), $postID);
         echo json_encode($result);
         exit;
     }
 
     // Trang danh sách tin đã lưu
     public function index() {
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['redirect_after_login'] = '/tin-da-luu';
-            redirect('/dang-nhap');
-            exit;
-        }
+        Auth::requireLogin('/dang-nhap');
 
-        $userID = $_SESSION['user_id'];
+        $userID = Auth::id();
 
         // Phân trang
         $page = max(1, (int)($_GET['page'] ?? 1));

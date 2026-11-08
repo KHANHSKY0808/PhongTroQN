@@ -4,23 +4,20 @@ class PostController
     // Hiển thị form đăng tin
     public function create()
     {
+        Auth::requireLogin();
         view("post/dangtin");
     }
 
     // Xử lý lưu bài đăng
     public function store()
     {
+        Auth::requireLogin();
+
         if (!isset($_POST['dangtin'])) {
             redirect('/dang-tin');
         }
 
-        // Lấy userID hiện tại (ví dụ từ session)
-        session_start();
-        if (!isset($_SESSION['user'])) {
-            redirect('/dang-nhap');
-        }
-
-        $userID = $_SESSION['user']['UserID'];
+        $userID = Auth::id();
 
         $post = new Post();
 
@@ -77,12 +74,8 @@ class PostController
     }
 	public function myPosts()
 {
-    // Kiểm tra đăng nhập
-    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['UserID'])) {
-        redirect('/dang-nhap');
-    }
-
-    $userId = $_SESSION['user']['UserID'];
+    Auth::requireLogin();
+    $userId = Auth::id();
 
     $postModel = new Post();
     $posts = $postModel->getPostsByUser($userId);  // hàm này phải trả về mảng các tin
@@ -96,16 +89,17 @@ class PostController
 
 public function edit($id)
 {
-    // Kiểm tra đăng nhập
-    if (!isset($_SESSION['user'])) {
-        redirect('/dang-nhap');
-    }
+    Auth::requireLogin();
+    $userID = Auth::id();
 
     $postModel = new Post();
-    $post = $postModel->getPostById($id);  // hoặc hàm lấy chi tiết tin
+    $post = $postModel->getPostById($id);
 
-    if (!$post || $post['UserID'] != $_SESSION['user']['UserID']) {
-        die("Tin đăng không tồn tại hoặc bạn không có quyền sửa.");
+    // Cho phép chủ tin hoặc Admin được sửa
+    if (!$post || ($post['UserID'] != $userID && !Auth::isAdmin())) {
+        $_SESSION['error'] = "Tin đăng không tồn tại hoặc bạn không có quyền sửa.";
+        redirect('/tin-cua-toi');
+        exit;
     }
 
     // TRUYỀN BIẾN $post CHO VIEW
@@ -115,17 +109,16 @@ public function edit($id)
 // ==================== CẬP NHẬT TIN  ====================
 public function update()
 {
-    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['UserID'])) {
-        redirect('/dang-nhap');
+    Auth::requireLogin();
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['PostID'])) {
+        $_SESSION['error'] = "Dữ liệu không hợp lệ.";
+        redirect('/tin-cua-toi');
         exit;
     }
 
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['PostID'])) {
-        die("Dữ liệu không hợp lệ.");
-    }
-
     $postID  = (int)$_POST['PostID'];
-    $userID  = $_SESSION['user']['UserID'];
+    $userID  = Auth::id();
 
     // Kiểm tra quyền sở hữu trước khi cập nhật
     global $conn;
@@ -170,13 +163,10 @@ public function update()
 // ==================== XÓA TIN ====================
 public function delete($id)
 {
-    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['UserID'])) {
-        redirect('/dang-nhap');
-        exit;
-    }
+    Auth::requireLogin();
 
     $postID = (int)$id;
-    $userID = $_SESSION['user']['UserID'];   // ← SỬA DÒNG NÀY
+    $userID = Auth::id();
 
     global $conn;
 
@@ -198,10 +188,7 @@ public function delete($id)
     // ==================== BÁO CÁO TIN ĐĂNG ====================
     public function report()
     {
-        // Khởi động session
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Auth::requireLogin();
 
         // Kiểm tra POST request
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -210,12 +197,7 @@ public function delete($id)
             exit;
         }
 
-        // Kiểm tra đã đăng nhập
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo 'error: Must login';
-            exit;
-        }
+        $userID = Auth::id();
 
         $postID = intval($_POST['postID'] ?? 0);
         $reason = trim($_POST['reason'] ?? '');
@@ -239,7 +221,7 @@ public function delete($id)
         try {
             query(
                 "INSERT INTO baocao (UserID, PostID, NoiDung, DaXuLy) VALUES (?, ?, ?, 0)",
-                [$_SESSION['user_id'], $postID, $reason]
+                [$userID, $postID, $reason]
             );
             // Lưu message vào session
             $_SESSION['success_message'] = 'Báo cáo đã được gửi tới admin. Cảm ơn bạn!';

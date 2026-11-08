@@ -7,20 +7,7 @@ class UserController
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        // Kiểm tra đăng nhập – hỗ trợ cả AJAX và trang thường
-        if (!isset($_SESSION['user'])) {
-            if ($this->isAjaxRequest()) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
-                exit;
-            }
-            $_SESSION['error'] = "Vui lòng đăng nhập để truy cập trang này!";
-            redirect('/dang-nhap');
-        }
+        Auth::requireLogin();
     }
 
     // Kiểm tra có phải request AJAX không
@@ -42,21 +29,19 @@ class UserController
     // Trang quản lý tài khoản
     public function profile()
     {
-        $user = $_SESSION['user'];
+        $user = Auth::user();
         view('user/profile', ['user' => $user]);
     }
 
     // Cập nhật họ tên
     public function updateProfile()
     {
-        if (!isset($_SESSION['user'])) {
-            redirect('/dang-nhap');
-        }
+        Auth::requireLogin();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('/tai-khoan');
+            redirect('/tai-khoan?tab=info');
         }
 
-        $userId = $_SESSION['user']['UserID'];
+        $userId = Auth::id();
         $hoTen  = trim($_POST['hoten'] ?? '');
 
         if (empty($hoTen)) {
@@ -65,25 +50,23 @@ class UserController
         }
 
         if ($this->model()->updateName($userId, $hoTen)) {
-            $_SESSION['user']['HoTen'] = $hoTen;
+            Auth::updateUser(['HoTen' => $hoTen]);
             $_SESSION['success'] = "Cập nhật thông tin thành công!";
         } else {
             $_SESSION['error'] = "Cập nhật thất bại!";
         }
-        redirect(BASE_URL);
+        redirect('/tai-khoan?tab=info');
     }
 
     // Đổi mật khẩu
     public function changePassword()
     {
-        if (!isset($_SESSION['user'])) {
-            redirect('/dang-nhap');
-        }
+        Auth::requireLogin();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('/tai-khoan?tab=password');
         }
 
-        $userId   = $_SESSION['user']['UserID'];
+        $userId   = Auth::id();
         $old      = $_POST['old_password'] ?? '';
         $new      = $_POST['new_password'] ?? '';
         $confirm  = $_POST['confirm_password'] ?? '';
@@ -108,7 +91,7 @@ class UserController
         } else {
             $_SESSION['error'] = "Đổi mật khẩu thất bại!";
         }
-        redirect(BASE_URL);
+        redirect('/tai-khoan?tab=password');
     }
 
     // Gửi OTP (AJAX)
@@ -117,11 +100,13 @@ class UserController
         ob_clean();
         header('Content-Type: application/json; charset=utf-8');
 
-        if (!isset($_SESSION['user'])) {
+        if (!Auth::check()) {
             echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
             exit;
         }
 
+        $userId = Auth::id();
+        $user = Auth::user();
         $newPhone = trim($_POST['new_phone'] ?? '');
 
         if (!preg_match('/^0[3-9][0-9]{8}$/', $newPhone)) {
@@ -129,7 +114,7 @@ class UserController
             exit;
         }
 
-        if ($this->model()->phoneExistsExcept($newPhone, $_SESSION['user']['UserID'])) {
+        if ($this->model()->phoneExistsExcept($newPhone, $userId)) {
             echo json_encode(['success' => false, 'message' => 'Số điện thoại đã được sử dụng!']);
             exit;
         }
@@ -139,7 +124,7 @@ class UserController
         $_SESSION['otp_expire']  = time() + 180;
         $_SESSION['phone_pending'] = $newPhone;
 
-        $email = $_SESSION['user']['Email'];
+        $email = $user['Email'] ?? '';
 
         if (MailHelper::sendOTP($email, $otp)) {
             echo json_encode([
@@ -158,14 +143,12 @@ class UserController
     // Đổi số điện thoại (POST form)
     public function changePhone()
     {
-        if (!isset($_SESSION['user'])) {
-            redirect('/dang-nhap');
-        }
+        Auth::requireLogin();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('/tai-khoan?tab=phone');
         }
 
-        $userId   = $_SESSION['user']['UserID'];
+        $userId   = Auth::id();
         $newPhone = trim($_POST['new_phone'] ?? '');
         $otp      = trim($_POST['otp'] ?? '');
 
@@ -194,7 +177,7 @@ class UserController
         }
 
         if ($this->model()->updatePhone($userId, $newPhone)) {
-            $_SESSION['user']['SoDienThoai'] = $newPhone;
+            Auth::updateUser(['SoDienThoai' => $newPhone]);
             unset($_SESSION['otp_phone'], $_SESSION['otp_expire'], $_SESSION['phone_pending']);
             $_SESSION['success'] = "Đổi số điện thoại thành công!";
         } else {

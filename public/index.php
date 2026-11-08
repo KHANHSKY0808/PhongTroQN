@@ -1,11 +1,23 @@
 <?php
-// D:\XAMPP\HTDOCS\PHONGTROQN\public\index.php
+// PhongTroQN - Front Controller
 
-// Bật hiển thị lỗi khi develop (tắt khi lên host thật)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Nạp cấu hình & môi trường
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app/Helpers/Auth.php';
 
-session_start();
+// Cấu hình hiển thị lỗi theo môi trường
+if (defined('APP_DEBUG') && APP_DEBUG === true) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    error_reporting(0);
+}
 
-// Require file functions (chứa toàn bộ hàm hỗ trợ + config + route)
+// Khởi động session với cookie an toàn (HttpOnly, SameSite, Strict)
+Auth::startSession();
+
+// Nạp toàn bộ functions, controller và chạy router
 require_once __DIR__ . '/../app/functions.php';

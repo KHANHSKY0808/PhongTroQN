@@ -8,6 +8,7 @@ require_once __DIR__ . '/../config/config.php';
 
 // =================== 2. THƯ VIỆN & HELPER ================
 require_once __DIR__ . '/Helpers/Env.php';
+require_once __DIR__ . '/Helpers/Auth.php';
 require_once __DIR__ . '/Helpers/MailHelpers.php';
 
 
