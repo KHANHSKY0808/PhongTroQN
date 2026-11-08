@@ -152,17 +152,34 @@ function e($string) {
     return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
 }
 
+function vn_str_filter($str) {
+    $unicode = [
+        'a'=>'à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ',
+        'd'=>'đ|Đ',
+        'e'=>'è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ',
+        'i'=>'ì|í|ị|ỉ|ĩ',
+        'o'=>'ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ',
+        'u'=>'ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ',
+        'y'=>'ỳ|ý|ỵ|ỷ|ỹ'
+    ];
+    foreach($unicode as $khongdau=>$codau) {
+        $str = preg_replace("/($codau)/iu", $khongdau, $str);
+    }
+    return mb_strtolower($str, 'UTF-8');
+}
+
 // ==================== 5. ROUTING – PHIÊN BẢN HOÀN CHỈNH KHÔNG BAO GIỜ BỊ 404 KHI VÀO TRANG CHỦ ====================
-// Bảo vệ CSRF cho toàn bộ request POST / PUT / DELETE
-Csrf::verifyOrAbort();
+if (php_sapi_name() !== 'cli' || defined('APP_RUN_ROUTER')) {
+    // Bảo vệ CSRF cho toàn bộ request POST / PUT / DELETE
+    Csrf::verifyOrAbort();
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 
-// Xóa phần /PhongTroQN/public (và cả index.php nếu có)
-$uri = str_replace('/PhongTroQN/public', '', $uri);
-$uri = str_replace('/index.php', '', $uri);     // thêm dòng này
-$uri = rtrim($uri, '/');                        // bỏ dấu / cuối
-$uri = $uri === '' ? '/' : $uri;                // nếu rỗng thì là trang chủ
+    // Xóa phần /PhongTroQN/public (và cả index.php nếu có)
+    $uri = str_replace('/PhongTroQN/public', '', $uri);
+    $uri = str_replace('/index.php', '', $uri);
+    $uri = rtrim($uri, '/');
+    $uri = $uri === '' ? '/' : $uri;
 
 // HOẶC dùng query string nếu .htaccess không hoạt động
 if (isset($_GET['page'])) {
@@ -272,16 +289,4 @@ match (true) {
     
     default                                              => view('errors/404'),
 };
-
-function vn_str_filter($str) {
-    $unicode = [
-        'a'=>'à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ',
-        'd'=>'đ','e'=>'è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ',
-        'i'=>'ì|í|ị|ỉ|ĩ','o'=>'ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ',
-        'u'=>'ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ','y'=>'ỳ|ý|ỵ|ỷ|ỹ'
-    ];
-    foreach($unicode as $khongdau=>$codau) {
-        $str = preg_replace("/($codau)/i", $khongdau, $str);
-    }
-    return strtolower($str);
 }

@@ -9,13 +9,15 @@ class Auth
     public static function startSession(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
-            ini_set('session.cookie_httponly', '1');
-            ini_set('session.use_only_cookies', '1');
-            ini_set('session.cookie_samesite', 'Lax');
-            if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-                ini_set('session.cookie_secure', '1');
+            if (!headers_sent()) {
+                ini_set('session.cookie_httponly', '1');
+                ini_set('session.use_only_cookies', '1');
+                ini_set('session.cookie_samesite', 'Lax');
+                if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+                    ini_set('session.cookie_secure', '1');
+                }
             }
-            session_start();
+            @session_start();
         }
     }
 
@@ -61,8 +63,10 @@ class Auth
     public static function login(array $user): void
     {
         self::startSession();
-        // Tái tạo Session ID để chống Session Fixation
-        session_regenerate_id(true);
+        // Tái tạo Session ID để chống Session Fixation (chỉ khi chưa gửi headers)
+        if (!headers_sent()) {
+            session_regenerate_id(true);
+        }
 
         $userId = (int)$user['UserID'];
         $isAdmin = (int)($user['IsAdmin'] ?? 0);
@@ -102,7 +106,7 @@ class Auth
         self::startSession();
         $_SESSION = [];
 
-        if (ini_get("session.use_cookies")) {
+        if (ini_get("session.use_cookies") && !headers_sent()) {
             $params = session_get_cookie_params();
             setcookie(
                 session_name(),
@@ -115,7 +119,9 @@ class Auth
             );
         }
 
-        session_destroy();
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
     }
 
     /**

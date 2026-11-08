@@ -9,3 +9,5 @@ composer.phar
 /public/uploads/
 *.log
 *.sqlite
+.phpunit.result.cache
+

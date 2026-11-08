@@ -12,7 +12,7 @@ class User
 
         $sql = "SELECT UserID FROM user WHERE $field = :value LIMIT 1";
         $stmt = query($sql, [':value' => $value]);
-        return $stmt->rowCount() > 0;
+        return (bool)$stmt->fetch();
     }
 
     // Đăng ký người dùng mới (mặc định là Người thuê – RoleID = 3)
@@ -116,7 +116,7 @@ class User
             ':phone' => $phone,
             ':id'    => $excludeUserId
         ]);
-        return $stmt->rowCount() > 0;
+        return (bool)$stmt->fetch();
     }
 
     // Cập nhật mật khẩu

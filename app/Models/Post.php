@@ -42,17 +42,17 @@ class Post
     {
         $sql = "INSERT INTO post 
                 (UserID, TieuDe, MoTa, DiaChi, DienTich, GiaPhong, Latitude, Longitude, TrangThai, NgayDang)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)";
 
         query($sql, [
             $data['UserID'],
             $data['TieuDe'],
-            $data['MoTa'],
+            $data['MoTa'] ?? '',
             $data['DiaChi'],
             $data['DienTich'],
             $data['GiaPhong'],
-            $data['Latitude'],
-            $data['Longitude']
+            $data['Latitude'] ?? null,
+            $data['Longitude'] ?? null
         ]);
 
         // trả về ID bài đăng vừa tạo

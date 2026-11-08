@@ -6,6 +6,14 @@ class DB
     private static ?PDO $pdo = null;
 
     /**
+     * Thiết lập kết nối PDO (hữu ích cho testing với SQLite in-memory)
+     */
+    public static function setConnection(?PDO $pdo): void
+    {
+        self::$pdo = $pdo;
+    }
+
+    /**
      * Khởi tạo hoặc lấy đối tượng PDO kết nối CSDL
      */
     public static function connect(): PDO
