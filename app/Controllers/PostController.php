@@ -39,26 +39,30 @@ class PostController
         // ===== Upload ảnh =====
         if (!empty($_FILES['images']['name'][0])) {
             foreach ($_FILES['images']['name'] as $i => $name) {
-                if ($_FILES['images']['error'][$i] === 0) {
+                if (isset($_FILES['images']['error'][$i]) && $_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
                     $file = [
                         'name'     => $_FILES['images']['name'][$i],
                         'tmp_name' => $_FILES['images']['tmp_name'][$i],
-                        'error'    => 0
+                        'error'    => $_FILES['images']['error'][$i],
+                        'size'     => $_FILES['images']['size'][$i] ?? 0
                     ];
                     $url = upload($file, 'posts');
 
-                    // Lưu ảnh vào DB
-                    $post->addImage($postID, $url);
+                    // Chỉ lưu ảnh vào DB nếu upload thành công và hợp lệ
+                    if ($url) {
+                        $post->addImage($postID, $url);
+                    }
                 }
             }
         }
 
         // ===== Upload video =====
         if (!empty($_FILES['video']['tmp_name'])) {
-            if ($_FILES['video']['error'] === 0) {
+            if (isset($_FILES['video']['error']) && $_FILES['video']['error'] === UPLOAD_ERR_OK) {
                 $videoUrl = upload($_FILES['video'], 'videos');
-
-                $post->updateVideo($postID, $videoUrl);
+                if ($videoUrl) {
+                    $post->updateVideo($postID, $videoUrl);
+                }
             }
         }
 

@@ -38,13 +38,77 @@ function redirect($url = '') {
 }
 
 function upload($file, $subfolder = 'posts') {
-    if ($file['error'] !== 0) return false;
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = time() . '_' . rand(1000,9999) . '.' . $ext;
-    $dir = UPLOADS_PATH . '/' . $subfolder;
-    if (!is_dir($dir)) mkdir($dir, 0777, true);
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+        return false;
+    }
+
+    if (empty($file['tmp_name']) || !file_exists($file['tmp_name'])) {
+        return false;
+    }
+
+    // Sanitize subfolder để chống Directory Traversal
+    $subfolder = preg_replace('/[^a-zA-Z0-9_\-]/', '', $subfolder);
+    if (empty($subfolder)) {
+        $subfolder = 'posts';
+    }
+
+    $isVideo = ($subfolder === 'videos');
+
+    // 1. Whitelist extension & MIME type thực tế (finfo)
+    $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+
+    $allowedImageExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    $allowedImageMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+    $allowedVideoExts = ['mp4', 'webm', 'mov', 'ogg'];
+    $allowedVideoMimes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/ogg'];
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $realMime = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if ($isVideo) {
+        $maxSize = 30 * 1024 * 1024; // 30 MB
+        if (!in_array($ext, $allowedVideoExts, true) || !in_array($realMime, $allowedVideoMimes, true)) {
+            return false;
+        }
+    } else {
+        $maxSize = 5 * 1024 * 1024; // 5 MB
+        if (!in_array($ext, $allowedImageExts, true) || !in_array($realMime, $allowedImageMimes, true)) {
+            return false;
+        }
+    }
+
+    // 2. Giới hạn dung lượng file
+    $fileSize = (int)($file['size'] ?? filesize($file['tmp_name']));
+    if ($fileSize <= 0 || $fileSize > $maxSize) {
+        return false;
+    }
+
+    // 3. Đổi tên ngẫu nhiên an toàn bằng random_bytes
+    try {
+        $randomHex = bin2hex(random_bytes(16));
+    } catch (Exception $e) {
+        $randomHex = md5(uniqid((string)mt_rand(), true));
+    }
+    $filename = time() . '_' . $randomHex . '.' . $ext;
+
+    $dir = rtrim(UPLOADS_PATH, '/\\') . '/' . $subfolder;
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+
     $target = $dir . '/' . $filename;
-    move_uploaded_file($file['tmp_name'], $target);
+
+    // Sử dụng move_uploaded_file nếu là file upload thật, fallback copy nếu môi trường CLI/test
+    $moved = is_uploaded_file($file['tmp_name'])
+        ? move_uploaded_file($file['tmp_name'], $target)
+        : copy($file['tmp_name'], $target);
+
+    if (!$moved) {
+        return false;
+    }
+
     return '/uploads/' . $subfolder . '/' . $filename;
 }
 
