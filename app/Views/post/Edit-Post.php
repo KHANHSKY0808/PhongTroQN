@@ -1,25 +1,9 @@
 <?php
-require dirname(__DIR__, 3) . '/config/config.php';
-
-// === KIỂM TRA ĐĂNG NHẬP ===
-if (!isset($_SESSION['user']) || !isset($_SESSION['user']['UserID'])) {
-    redirect('/dang-nhap');
+// app/Views/post/Edit-Post.php
+// $post được truyền từ PostController::edit
+if (empty($post)) {
+    redirect('/tin-cua-toi');
     exit;
-}
-
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    die("Không tìm thấy tin đăng.");
-}
-
-$postID = (int)$_GET['id'];
-$userID = $_SESSION['user']['UserID'];
-
-// DÙNG CLASS POST ĐÃ CÓ SẴN → CHẮC CHẮN LẤY ĐƯỢC DỮ LIỆU!!!
-$postModel = new Post();
-$post = $postModel->getPostById($postID);  // ← DÒNG NÀY SẼ TRẢ VỀ DỮ LIỆU!!!
-
-if (!$post || $post['UserID'] != $userID) {
-    die("Tin đăng không tồn tại hoặc bạn không có quyền sửa.");
 }
 ?>
 <link rel="stylesheet" href="<?= ASSETS_URL ?>/css/edit-post.css?v=<?= time() ?>">

@@ -125,13 +125,12 @@ public function updatePost($data)
 // Xóa tin đăng
 public function deletePost($postID)
 {
-    // Xóa ảnh trước
+    // Xóa dữ liệu liên quan trước
     query("DELETE FROM hinhanh WHERE PostID = ?", [$postID]);
+    query("DELETE FROM favorites WHERE PostID = ?", [$postID]);
+    query("DELETE FROM baocao WHERE PostID = ?", [$postID]);
 
-    // Xóa video
-    query("UPDATE post SET Video = NULL WHERE PostID = ?", [$postID]);
-
-    // Xóa bài đăng
+    // Xóa bài đăng chính
     query("DELETE FROM post WHERE PostID = ?", [$postID]);
 }
 

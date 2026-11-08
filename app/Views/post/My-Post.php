@@ -43,10 +43,10 @@ if (!isset($posts)) $posts = [];
                 <td style="padding:12px; text-align:center;">
                     <a href="<?= BASE_URL ?>/sua-tin/<?= $p['PostID'] ?>" 
                        class="btn" style="padding:6px 12px; font-size:0.9em;">Cập nhật</a>
-                    <a href="<?= BASE_URL ?>/xoa-tin/<?= $p['PostID'] ?>" 
-                       class="btn btn-delete" 
-                       style="padding:6px 12px; font-size:0.9em;"
-                       onclick="return confirm('Xóa vĩnh viễn tin này?')">Xóa</a>
+                    <form method="POST" action="<?= BASE_URL ?>/xoa-tin/<?= $p['PostID'] ?>" style="display:inline-block;" onsubmit="return confirm('Xóa vĩnh viễn tin này?')">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-delete" style="padding:6px 12px; font-size:0.9em; border:none; cursor:pointer;">Xóa</button>
+                    </form>
                 </td>
             </tr>
             <?php endforeach; ?>

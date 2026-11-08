@@ -117,47 +117,36 @@ public function update()
         exit;
     }
 
-    $postID  = (int)$_POST['PostID'];
-    $userID  = Auth::id();
+    $postID = (int)$_POST['PostID'];
+    $userID = Auth::id();
 
-    // Kiểm tra quyền sở hữu trước khi cập nhật
-    global $conn;
-    $check = $conn->prepare("SELECT PostID FROM post WHERE PostID = ? AND UserID = ?");
-    $check->bind_param("ii", $postID, $userID);
-    $check->execute();
-    if ($check->get_result()->num_rows === 0) {
-        $check->close();
-        die("Bạn không có quyền sửa tin này!");
+    $postModel = new Post();
+    $post = $postModel->getPostById($postID);
+
+    if (!$post) {
+        $_SESSION['error'] = "Tin đăng không tồn tại!";
+        redirect('/tin-cua-toi');
+        exit;
     }
-    $check->close();
 
-    // Cập nhật dữ liệu thật
-    $sql = "UPDATE post SET 
-            TieuDe = ?, 
-            MoTa = ?, 
-            DiaChi = ?, 
-            DienTich = ?, 
-            GiaPhong = ? 
-            WHERE PostID = ? AND UserID = ?";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param(
-        "ssssdii",
-        $_POST['TieuDe'],
-        $_POST['MoTa'],
-        $_POST['DiaChi'],
-        $_POST['DienTich'],
-        $_POST['GiaPhong'],
-        $postID,
-        $userID
-    );
-
-    if ($stmt->execute()) {
-        redirect('/tin-cua-toi?updated=1');
-    } else {
-        die("Cập nhật thất bại: " . $conn->error);
+    // Chống IDOR: Chỉ chủ tin hoặc Admin mới được sửa
+    if ($post['UserID'] != $userID && !Auth::isAdmin()) {
+        $_SESSION['error'] = "Bạn không có quyền sửa tin này!";
+        redirect('/tin-cua-toi');
+        exit;
     }
-    $stmt->close();
+
+    $postModel->updatePost([
+        'PostID'   => $postID,
+        'TieuDe'   => trim($_POST['TieuDe'] ?? ''),
+        'MoTa'     => trim($_POST['MoTa'] ?? ''),
+        'DiaChi'   => trim($_POST['DiaChi'] ?? ''),
+        'DienTich' => floatval($_POST['DienTich'] ?? 0),
+        'GiaPhong' => floatval($_POST['GiaPhong'] ?? 0)
+    ]);
+
+    $_SESSION['success'] = "Cập nhật tin thành công!";
+    redirect('/tin-cua-toi?updated=1');
 }
 
 // ==================== XÓA TIN ====================
@@ -168,22 +157,28 @@ public function delete($id)
     $postID = (int)$id;
     $userID = Auth::id();
 
-    global $conn;
+    $postModel = new Post();
+    $post = $postModel->getPostById($postID);
 
-    // Kiểm tra quyền + Xóa luôn bằng 1 câu lệnh (an toàn + nhanh)
-    $sql = "DELETE FROM post WHERE PostID = ? AND UserID = ? LIMIT 1";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $postID, $userID);
+    if (!$post) {
+        $_SESSION['error'] = "Tin đăng không tồn tại!";
+        redirect('/tin-cua-toi');
+        exit;
+    }
 
-    if ($stmt->execute() && $stmt->affected_rows > 0) {
-        // Xóa luôn ảnh trong bảng hinhanh (nếu có)
-        $conn->query("DELETE FROM hinhanh WHERE PostID = $postID");
-        redirect('/tin-cua-toi?deleted=1');
-    } else {
-        die("Không thể xóa tin này (có thể không phải của bạn).");
+    // Chống IDOR: Chỉ chủ tin hoặc Admin mới được xóa
+    if ($post['UserID'] != $userID && !Auth::isAdmin()) {
+        $_SESSION['error'] = "Bạn không có quyền xóa tin này!";
+        redirect('/tin-cua-toi');
+        exit;
     }
-    $stmt->close();
-    }
+
+    // Xóa an toàn thông qua Post Model
+    $postModel->deletePost($postID);
+
+    $_SESSION['success'] = "Xóa tin thành công!";
+    redirect('/tin-cua-toi?deleted=1');
+}
 
     // ==================== BÁO CÁO TIN ĐĂNG ====================
     public function report()

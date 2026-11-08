@@ -147,6 +147,10 @@ if (preg_match('#^/sua-tin/(\d+)$#', $uri, $m)) {
 }
 
 if (preg_match('#^/xoa-tin/(\d+)$#', $uri, $m)) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        die('405 Method Not Allowed: Thao tác xóa tin yêu cầu phương thức POST.');
+    }
     (new PostController)->delete($m[1]);
     exit;
 }
