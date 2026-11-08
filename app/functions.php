@@ -193,7 +193,9 @@ match (true) {
         !empty($_GET['gia']) || 
         !empty($_GET['loai']) || 
         !empty($_GET['dientich']) || 
-        !empty($_GET['dactiem'])
+        !empty($_GET['dactiem']) ||
+        !empty($_GET['tinh']) ||
+        !empty($_GET['huyen'])
     ) => (new HomeController)->filter(),
     
     in_array($uri, ['/', '/trang-chu', '/index.php', '']) => (new HomeController)->index(),

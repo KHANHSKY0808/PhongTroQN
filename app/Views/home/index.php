@@ -1,11 +1,61 @@
 <?php
 // app/Views/home/index.php
-$title = "PhongTroQN - Phòng trọ Quy Nhơn số 1";
+$title = $title ?? "PhongTroQN - Phòng trọ Quy Nhơn số 1";
 require_once __DIR__ . '/../partials/header.php';
 ?>
 
 <link rel="stylesheet" href="<?= ASSETS_URL ?>/css/index.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= ASSETS_URL ?>/css/post-detail-modal.css?v=<?= time() ?>">
+
+<style>
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 35px 0 20px;
+}
+.pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid #dce2e6;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+.pagination .page-link:hover {
+    background: #0073e6;
+    color: #fff;
+    border-color: #0073e6;
+    transform: translateY(-1px);
+}
+.pagination .page-link.active {
+    background: #0073e6;
+    color: #fff;
+    border-color: #0073e6;
+    cursor: default;
+    box-shadow: 0 4px 10px rgba(0, 115, 230, 0.3);
+}
+.pagination .page-dots {
+    color: #888;
+    padding: 0 4px;
+    font-weight: bold;
+}
+</style>
 
 <!-- Hiển thị thông báo thành công -->
 <?php if (isset($_SESSION['success_message'])): ?>
@@ -83,6 +133,57 @@ require_once __DIR__ . '/../partials/header.php';
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if (!empty($totalPages) && $totalPages > 1): ?>
+            <?php
+                $currentPage = (int)($currentPage ?? $page ?? 1);
+                $totalPages = (int)$totalPages;
+                $queryParams = $queryParams ?? $filters ?? [];
+                $baseUrl = !empty($queryParams) ? BASE_URL . '/loc-tin' : BASE_URL . '/';
+                $buildUrl = function($pageNum) use ($baseUrl, $queryParams) {
+                    $params = array_merge($queryParams, ['page' => $pageNum]);
+                    return $baseUrl . '?' . http_build_query($params);
+                };
+            ?>
+            <div class="pagination-wrapper">
+                <nav class="pagination" aria-label="Phân trang bài viết">
+                    <?php if ($currentPage > 1): ?>
+                        <a href="<?= htmlspecialchars($buildUrl($currentPage - 1)) ?>" class="page-link prev-page" title="Trang trước">&laquo; Trước</a>
+                    <?php endif; ?>
+
+                    <?php
+                        $start = max(1, $currentPage - 2);
+                        $end = min($totalPages, $currentPage + 2);
+
+                        if ($start > 1) {
+                            echo '<a href="' . htmlspecialchars($buildUrl(1)) . '" class="page-link">1</a>';
+                            if ($start > 2) {
+                                echo '<span class="page-dots">&hellip;</span>';
+                            }
+                        }
+
+                        for ($i = $start; $i <= $end; $i++) {
+                            if ($i === $currentPage) {
+                                echo '<span class="page-link active">' . $i . '</span>';
+                            } else {
+                                echo '<a href="' . htmlspecialchars($buildUrl($i)) . '" class="page-link">' . $i . '</a>';
+                            }
+                        }
+
+                        if ($end < $totalPages) {
+                            if ($end < $totalPages - 1) {
+                                echo '<span class="page-dots">&hellip;</span>';
+                            }
+                            echo '<a href="' . htmlspecialchars($buildUrl($totalPages)) . '" class="page-link">' . $totalPages . '</a>';
+                        }
+                    ?>
+
+                    <?php if ($currentPage < $totalPages): ?>
+                        <a href="<?= htmlspecialchars($buildUrl($currentPage + 1)) ?>" class="page-link next-page" title="Trang sau">Sau &raquo;</a>
+                    <?php endif; ?>
+                </nav>
+            </div>
+        <?php endif; ?>
     <?php else: ?>
         <p style="text-align:center;padding:80px;color:#888;">Hiện chưa có tin đăng nào.</p>
     <?php endif; ?>

@@ -134,6 +134,146 @@ public function deletePost($postID)
     query("DELETE FROM post WHERE PostID = ?", [$postID]);
 }
 
+    /**
+     * Xây dựng mệnh đề WHERE và tham số truy vấn lọc tin
+     */
+    private function buildFilterConditions(array $filters): array
+    {
+        $conditions = ["p.TrangThai = 1"];
+        $params = [];
+
+        // 1. Lọc theo Loại phòng
+        if (!empty($filters['loai']) && $filters['loai'] !== 'Tất cả') {
+            $loai = trim($filters['loai']);
+            $conditions[] = "(p.TieuDe LIKE ? OR p.MoTa LIKE ?)";
+            $params[] = "%{$loai}%";
+            $params[] = "%{$loai}%";
+        }
+
+        // 2. Lọc theo Giá phòng (min-max)
+        if (!empty($filters['gia'])) {
+            $parts = explode('-', $filters['gia']);
+            $minGia = floatval($parts[0] ?? 0);
+            $maxGia = floatval($parts[1] ?? 999999999);
+            $conditions[] = "p.GiaPhong >= ? AND p.GiaPhong <= ?";
+            $params[] = $minGia;
+            $params[] = $maxGia;
+        }
+
+        // 3. Lọc theo Diện tích (min-max)
+        if (!empty($filters['dientich'])) {
+            $parts = explode('-', $filters['dientich']);
+            $minDt = floatval($parts[0] ?? 0);
+            $maxDt = floatval($parts[1] ?? 9999);
+            if ($maxDt >= 999) {
+                $maxDt = 99999;
+            }
+            $conditions[] = "p.DienTich >= ? AND p.DienTich <= ?";
+            $params[] = $minDt;
+            $params[] = $maxDt;
+        }
+
+        // 4. Lọc theo Đặc điểm nổi bật
+        if (!empty($filters['dactiem'])) {
+            $tags = array_filter(array_map('trim', explode(',', $filters['dactiem'])));
+            if (!empty($tags)) {
+                $tagClauses = [];
+                foreach ($tags as $tag) {
+                    $tagClauses[] = "p.MoTa LIKE ?";
+                    $params[] = "%{$tag}%";
+                }
+                $conditions[] = "(" . implode(" OR ", $tagClauses) . ")";
+            }
+        }
+
+        // 5. Lọc theo Tỉnh/Thành phố & Quận/Huyện
+        $tinh = trim($filters['tinh'] ?? '');
+        $huyen = trim($filters['huyen'] ?? '');
+
+        if (!empty($huyen)) {
+            $huyenClean = trim(str_ireplace(['tp. ', 'thành phố ', 'huyện ', 'thị xã ', 'quận '], '', $huyen));
+            $conditions[] = "p.DiaChi LIKE ?";
+            $params[] = "%{$huyenClean}%";
+        } elseif (!empty($tinh) && $tinh !== 'binhdinh') {
+            $tinhMap = [
+                'hcm' => 'Hồ Chí Minh', 'hn' => 'Hà Nội', 'danang' => 'Đà Nẵng',
+                'binhduong' => 'Bình Dương', 'camaau' => 'Cà Mau', 'cantho' => 'Cần Thơ'
+            ];
+            $tinhSearch = $tinhMap[$tinh] ?? $tinh;
+            $conditions[] = "p.DiaChi LIKE ?";
+            $params[] = "%{$tinhSearch}%";
+        }
+
+        return [$conditions, $params];
+    }
+
+    /**
+     * Lấy danh sách tin bài theo bộ lọc SQL kèm phân trang
+     */
+    public function getFilteredPosts(array $filters = [], int $limit = 12, int $offset = 0): array
+    {
+        [$conditions, $params] = $this->buildFilterConditions($filters);
+
+        $limit = max(1, (int)$limit);
+        $offset = max(0, (int)$offset);
+
+        $whereClause = implode(" AND ", $conditions);
+
+        $sql = "
+            SELECT 
+                p.PostID,
+                p.TieuDe,
+                p.MoTa,
+                p.DiaChi,
+                p.DienTich,
+                p.GiaPhong,
+                p.Latitude,
+                p.Longitude,
+                p.NgayDang,
+                u.HoTen AS TenNguoiDang,
+                u.SoDienThoai,
+                (SELECT URLAnh FROM hinhanh WHERE PostID = p.PostID ORDER BY HinhID ASC LIMIT 1) AS AnhDaiDien,
+                GROUP_CONCAT(h.URLAnh ORDER BY h.HinhID) AS danh_sach_anh
+            FROM post p
+            JOIN user u ON p.UserID = u.UserID
+            LEFT JOIN hinhanh h ON p.PostID = h.PostID
+            WHERE {$whereClause}
+            GROUP BY p.PostID
+            ORDER BY p.NgayDang DESC
+            LIMIT {$limit} OFFSET {$offset}
+        ";
+
+        $stmt = query($sql, $params);
+        $results = $stmt->fetchAll();
+
+        foreach ($results as &$post) {
+            if (!empty($post['danh_sach_anh'])) {
+                $urls = explode(',', $post['danh_sach_anh']);
+                $post['images'] = array_map(fn($url) => ['URLAnh' => trim($url)], $urls);
+            } else {
+                $post['images'] = [];
+            }
+            unset($post['danh_sach_anh']);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Đếm tổng số bài đăng khớp với bộ lọc SQL
+     */
+    public function countFilteredPosts(array $filters = []): int
+    {
+        [$conditions, $params] = $this->buildFilterConditions($filters);
+        $whereClause = implode(" AND ", $conditions);
+
+        $sql = "SELECT COUNT(DISTINCT p.PostID) as total FROM post p JOIN user u ON p.UserID = u.UserID WHERE {$whereClause}";
+        $stmt = query($sql, $params);
+        $row = $stmt->fetch();
+
+        return (int)($row['total'] ?? 0);
+    }
+
     public function getActivePostsWithDetails()
     {
         $sql = "
