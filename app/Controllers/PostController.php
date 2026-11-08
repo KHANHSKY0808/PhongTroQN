@@ -223,8 +223,9 @@ public function delete($id)
             // Redirect về trang chủ
             redirect('/');
         } catch (Exception $e) {
+            Logger::error("Lỗi gửi báo cáo: " . $e->getMessage(), ['post_id' => $postID, 'user_id' => $userID]);
             http_response_code(500);
-            echo 'error: ' . $e->getMessage();
+            echo 'Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại sau!';
         }
         exit;
     }
