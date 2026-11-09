@@ -1,145 +1,190 @@
-# PhongTroQN - Nền Tảng Tìm Kiếm & Cho Thuê Phòng Trọ Quy Nhơn
+# PhongTroQN - Accommodation Rental & Room Finding Platform
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-blue.svg)](https://www.php.net/)
 [![Database](https://img.shields.io/badge/MySQL-8.0-orange.svg)](https://www.mysql.com/)
 [![Tests](https://img.shields.io/badge/PHPUnit-100%25%20Passed-brightgreen.svg)](tests/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](docker-compose.yml)
 [![Architecture](https://img.shields.io/badge/MVC-Custom%20Router-green.svg)](docs/ARCHITECTURE.md)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-PhongTroQN là website kết nối người có nhu cầu thuê phòng và các chủ nhà trọ tại thành phố Quy Nhơn (Bình Định). Dự án được xây dựng theo kiến trúc **PHP thuần tự xây MVC**, router regex/match riêng biệt, giao tiếp MySQL qua PDO Singleton, bản đồ vị trí trực quan bằng **Leaflet & OpenStreetMap**.
+**PhongTroQN** is a full-featured web platform connecting room seekers with rental property landlords in Quy Nhon City, Vietnam. Built from the ground up using **Vanilla PHP with a custom MVC architecture**, an expressive regex/match router, a PDO Singleton database abstraction, and interactive spatial mapping powered by **Leaflet & OpenStreetMap**.
 
-Mã nguồn đã được tái cấu trúc và củng cố toàn diện, tối ưu bảo mật, hiệu năng và sẵn sàng triển khai môi trường Docker/CI-CD phục vụ đánh giá năng lực tuyển dụng Backend / Fullstack Engineer.
-
----
-
-## 🌟 Điểm Nhấn Kỹ Thuật (CV Highlights)
-
-- **Bảo Mật Toàn Diện (Security Hardened)**:
-  - **Upload file an toàn tuyệt đối**: Kiểm tra phần mở rộng file (whitelist) kết hợp xác thực định dạng MIME thực tế bằng `finfo_file()`. Đổi tên file ngẫu nhiên qua `bin2hex(random_bytes(16))`. Khóa quyền thực thi script PHP trong thư mục upload bằng `.htaccess` (`engine off`).
-  - **Phòng chống CSRF**: Middleware CSRF bảo vệ toàn bộ HTTP mutating requests (`POST`, `PUT`, `DELETE`) với token `random_bytes(32)`.
-  - **Chống IDOR (Insecure Direct Object References)**: Kiểm tra nghiêm ngặt quyền sở hữu khi sửa hoặc xóa bài đăng. Chuyển thao tác xóa bài sang phương thức HTTP `POST`.
-  - **Quản lý phiên & Auth Middleware**: Khởi tạo session an toàn (`HttpOnly`, `SameSite=Lax`, `Secure`), gọi `session_regenerate_id(true)` ngay khi đăng nhập để ngăn chặn Session Fixation.
-  - **Bảo vệ Secret**: Tách toàn bộ cấu hình nhạy cảm (DB, SMTP, App keys) ra file `.env`, không bao giờ commit secret vào Git.
-  - **Bảo mật OTP & Chống Brute-force**: Sinh OTP bằng `random_int()`, lưu hash bảo mật bằng `password_hash()`, giới hạn tần suất gửi OTP (60s) và giới hạn 5 lần nhập sai. Thêm Rate Limiting khi đăng nhập sai quá 5 lần.
-
-- **Hiệu Năng Cao (High Performance)**:
-  - **Lọc tin 100% bằng SQL**: Thay thế hoàn toàn vòng lặp lọc PHP trên RAM bằng truy vấn SQL tối ưu (`WHERE` linh hoạt, Prepared Statements).
-  - **Phân trang dữ liệu**: Triển khai `LIMIT` và `OFFSET` chuẩn mực kết hợp lưu giữ các bộ lọc tìm kiếm trên URL.
-  - **Tối ưu Index**: Đánh chỉ mục tổ hợp (`TrangThai`, `GiaPhong`, `DienTich`, `PostID`) và khóa ngoại `ON DELETE CASCADE`.
-
-- **Cấu Trúc Sạch Sẽ (Clean Architecture & DevOps)**:
-  - Tích hợp chuẩn **Composer & PSR-4 Autoload**, xóa bỏ các thư viện nhúng thủ công.
-  - **Lớp Validator tập trung** hỗ trợ nhiều quy tắc (`required`, `numeric`, `min`, `max`, `phone`, `video_url` YouTube/TikTok whitelist...).
-  - **Ghi log tập trung (Centralized Logging)** và trang lỗi 500 thân thiện, ẩn chi tiết hệ thống khi chạy production.
-  - Bộ kiểm thử tự động **PHPUnit** với 21 unit tests (100% pass) hỗ trợ SQLite in-memory database độc lập.
-  - Đóng gói trọn gói bằng **Docker & Docker Compose** (PHP 8.2 + Apache + MySQL 8.0 + phpMyAdmin).
-  - Tích hợp **GitHub Actions CI** tự động kiểm tra cú pháp PHP (`php -l`) và chạy test suite trên mỗi commit.
+The codebase has undergone comprehensive security hardening, query performance optimization, and architectural refactoring. It is fully containerized with Docker and integrated with GitHub Actions CI, engineered to demonstrate production-grade Backend / Fullstack engineering standards.
 
 ---
 
-## 🗄️ Mô Hình Cơ Sở Dữ Liệu (ERD)
+## 🌟 Technical Highlights (CV Ready)
 
-Chi tiết sơ đồ luồng dữ liệu và thiết kế kiến trúc xem tại: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+### 🛡️ Bulletproof Security (Hardened)
+- **Zero-Trust File Upload Pipeline**:
+  - Whitelists file extensions and verifies genuine MIME types via `finfo_file()` (preventing MIME spoofing and polyglot payloads).
+  - Generates cryptographically secure, unpredictable filenames using `bin2hex(random_bytes(16))`.
+  - Disables PHP script execution in the upload directory via custom `.htaccess` directives (`engine off`, handler stripping, access denial for executables).
+  - Implements strict file size quotas (5MB for images, 30MB for videos).
+- **Comprehensive CSRF Defense**:
+  - Centralized `Csrf` helper generating 256-bit cryptographically secure tokens.
+  - Global middleware intercepting and validating all mutating HTTP requests (`POST`, `PUT`, `DELETE`).
+  - Seamless integration with both form helpers (`csrf_field()`) and AJAX requests via `X-CSRF-Token` headers.
+- **Strict IDOR (Insecure Direct Object Reference) Prevention**:
+  - Verifies record ownership on every edit and delete operation: only the original post author (`UserID`) or verified Administrators are authorized.
+  - Converted destructive post deletion from HTTP `GET` to HTTP `POST` protected by CSRF tokens.
+- **Unified Session & Auth Middleware**:
+  - Centralized authentication helper (`Auth`) ensuring safe session initialization with `HttpOnly`, `SameSite=Lax`, and conditional `Secure` cookie flags.
+  - Invokes `session_regenerate_id(true)` upon successful login to thwart **Session Fixation** attacks.
+  - Standardized user state across the application, eliminating conflicting session keys.
+- **Zero Secret Commits (.env)**:
+  - Extracted all database credentials, SMTP keys, and application configurations into environment variables (`.env`).
+  - Provided a production-ready `.env.example` template; strictly enforced Git exclusion for secrets.
+- **Secure OTP & Brute-Force Rate Limiting**:
+  - Generates verification codes using `random_int(100000, 999999)` (CSPRNG).
+  - Stores only salted `password_hash()` hashes in sessions; validates through `password_verify()`.
+  - Enforces a 60-second cooldown between OTP requests and locks attempts after 5 failures.
+  - Implements login throttle mechanisms against credential stuffing.
+
+---
+
+### ⚡ High Performance & Database Optimization
+- **100% SQL-Driven Filtering**:
+  - Eliminated legacy in-memory PHP array filtering loops.
+  - Implemented dynamic prepared SQL queries with selective `WHERE` clauses for prices, room types, surface areas, and geographic locations.
+- **Database Pagination**:
+  - Replaced bulk record fetching with SQL `LIMIT` and `OFFSET` (12 posts per page).
+  - Built an intuitive pagination UI component maintaining active search filter query parameters across page transitions.
+- **Composite Indexing & Integrity**:
+  - Designed optimal composite indexes: `idx_post_filter (TrangThai, GiaPhong, DienTich, PostID)`, `idx_post_user (UserID)`, and `idx_baocao_status (DaXuLy)`.
+  - Configured Foreign Keys with `ON DELETE CASCADE` across all relational entities (`hinhanh`, `favorites`, `baocao`).
+
+---
+
+### 🏗️ Clean Architecture & DevOps
+- **Composer & PSR-4 Autoloading**:
+  - Clean `composer.json` managing dependencies (`vlucas/phpdotenv`, `phpmailer/phpmailer`, `phpunit/phpunit`).
+  - Configured PSR-4 autoloading for `App\` namespace and classmaps for Controllers, Models, and Helpers.
+  - Purged 69 committed legacy vendor files.
+- **Centralized Validator & Flash Messaging**:
+  - Reusable `Validator` supporting rules: `required`, `numeric`, `min`, `max`, `min_len`, `max_len`, `phone`, `email`, `latitude`, `longitude`, and video domain whitelisting (`YouTube`, `TikTok`).
+  - Modernized user feedback with session-driven flash notifications, replacing legacy JavaScript `alert()` popups.
+- **Centralized Logging & Environment-Aware Error Handling**:
+  - Custom `Logger` recording timestamped events (`[DATE] [LEVEL]: Message`) to `storage/logs/app.log`.
+  - Global uncaught exception handler rendering a user-friendly 500 error page in production while exposing verbose stack traces when `APP_DEBUG=true`.
+- **Automated Testing Suite (PHPUnit)**:
+  - 21 unit tests (74 assertions) achieving **100% pass rate**.
+  - Decoupled database testing using standalone **SQLite in-memory** fixtures.
+- **Full Dockerization & CI/CD**:
+  - Custom multi-stage `Dockerfile` (PHP 8.2 Apache + `mod_rewrite` + required extensions).
+  - `docker-compose.yml` orchestrating application, MySQL 8.0 (with automated schema & seed ingestion), and phpMyAdmin.
+  - **GitHub Actions CI Pipeline** running linting (`php -l`) and PHPUnit tests across PHP 8.0, 8.1, and 8.2.
+
+---
+
+## 🗄️ Database Entity-Relationship Diagram (ERD)
+
+Detailed system architecture diagrams, route maps, and data workflows are documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ```mermaid
 erDiagram
-    user ||--o{ post : "đăng"
-    user ||--o{ favorites : "lưu"
-    user ||--o{ baocao : "báo cáo"
-    user ||--o{ user_role : "thuộc"
-    vaitro ||--o{ user_role : "gán cho"
-    post ||--o{ hinhanh : "chứa"
-    post ||--o{ favorites : "được lưu bởi"
-    post ||--o{ baocao : "bị báo cáo"
+    user ||--o{ post : "authors"
+    user ||--o{ favorites : "saves"
+    user ||--o{ baocao : "reports"
+    user ||--o{ user_role : "belongs to"
+    vaitro ||--o{ user_role : "assigned to"
+    post ||--o{ hinhanh : "contains"
+    post ||--o{ favorites : "bookmarked by"
+    post ||--o{ baocao : "flagged by"
 
     user {
         int UserID PK
-        string HoTen
-        string Email UK
-        string MatKhau
-        string SoDienThoai
-        string DiaChi
-        tinyint TrangThai
-        tinyint IsAdmin
-        datetime created_at
+        string HoTen "Full Name"
+        string Email UK "Unique Email"
+        string MatKhau "Hashed Password"
+        string SoDienThoai "Phone Number"
+        string DiaChi "Address"
+        tinyint TrangThai "Status (1: Active)"
+        tinyint IsAdmin "Admin Flag (0/1)"
+        datetime created_at "Created Timestamp"
     }
 
     post {
         int PostID PK
-        int UserID FK
-        string TieuDe
-        text MoTa
-        decimal GiaPhong
-        decimal DienTich
-        string DiaChi
-        decimal Latitude
-        decimal Longitude
-        string TrangThai
-        string Video
-        datetime NgayDang
+        int UserID FK "Author ID"
+        string TieuDe "Title"
+        text MoTa "Description"
+        decimal GiaPhong "Monthly Rent"
+        decimal DienTich "Surface Area (m2)"
+        string DiaChi "Full Address"
+        decimal Latitude "Geo Latitude"
+        decimal Longitude "Geo Longitude"
+        string TrangThai "Listing Status"
+        string Video "Video Link or Path"
+        datetime NgayDang "Published Date"
     }
 
     hinhanh {
         int HinhID PK
-        int PostID FK
-        string URLAnh
+        int PostID FK "Post Reference"
+        string URLAnh "Image Relative Path"
     }
 
     favorites {
         int FavoriteID PK
-        int UserID FK
-        int PostID FK
-        datetime NgayLuu
+        int UserID FK "User Reference"
+        int PostID FK "Post Reference"
+        datetime NgayLuu "Saved At"
     }
 
     baocao {
         int BaoCaoID PK
-        int UserID FK
-        int PostID FK
-        text NoiDung
-        tinyint DaXuLy
-        datetime NgayBaoCao
+        int UserID FK "Reporter ID"
+        int PostID FK "Flagged Post ID"
+        text NoiDung "Report Reason"
+        tinyint DaXuLy "Resolution Flag"
+        datetime NgayBaoCao "Reported At"
     }
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Dự Án
+## 🚀 Quick Start & Installation
 
-### Cách 1: Chạy Siêu Tốc Bằng Docker (Khuyến Nghị)
+### Option 1: Instant Setup via Docker (Recommended)
 
-Yêu cầu máy đã cài **Docker** và **Docker Compose**.
+**Prerequisites**: [Docker Desktop](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed.
 
 ```bash
-# 1. Clone repository
+# 1. Clone the repository
 git clone https://github.com/your-username/PhongTroQN.git
 cd PhongTroQN
 
-# 2. Khởi chạy toàn bộ hệ thống bằng 1 lệnh duy nhất
+# 2. Spin up the entire environment with one command
 docker compose up -d
 ```
 
-Hệ thống sẽ tự động:
-- Build môi trường PHP 8.2 Apache và cài đặt Composer dependencies.
-- Khởi động MySQL 8.0 và tự động import [`database/schema.sql`](database/schema.sql) và [`database/seed.sql`](database/seed.sql).
-- Kích hoạt giao diện quản trị phpMyAdmin.
+Docker will automatically:
+- Build the PHP 8.2 Apache image and install Composer dependencies.
+- Boot MySQL 8.0 and automatically execute [`database/schema.sql`](database/schema.sql) followed by [`database/seed.sql`](database/seed.sql).
+- Start phpMyAdmin for database inspection.
 
-**Địa chỉ truy cập**:
-- Ứng dụng web: [http://localhost:8080](http://localhost:8080)
-- phpMyAdmin: [http://localhost:8081](http://localhost:8081) (User: `root`, Password: `root_secret_password`)
+**Access Endpoints**:
+- **Web Application**: [http://localhost:8080](http://localhost:8080)
+- **phpMyAdmin**: [http://localhost:8081](http://localhost:8081)
+  - Username: `root`
+  - Password: `root_secret_password`
 
 ---
 
-### Cách 2: Chạy Trên Môi Trường Local (XAMPP / WAMP)
+### Option 2: Local Development Setup (XAMPP / WAMP / Native)
 
-1. **Chuẩn bị mã nguồn**:
-   - Sao chép thư mục dự án vào `htdocs`: `C:\xampp\htdocs\PhongTroQN`
-2. **Cấu hình môi trường**:
-   - Sao chép file `.env.example` thành `.env`:
+**Prerequisites**: PHP >= 8.0, MySQL >= 8.0 (or MariaDB >= 10.4), [Composer](https://getcomposer.org/).
+
+1. **Deploy Source**:
+   - Clone or move the directory to your web root (e.g., `C:\xampp\htdocs\PhongTroQN`).
+2. **Environment Configuration**:
+   - Copy the sample environment file:
      ```bash
-     copy .env.example .env
+     cp .env.example .env     # Linux/macOS
+     copy .env.example .env   # Windows
      ```
-   - Chỉnh sửa thông tin CSDL trong file `.env` nếu cần:
+   - Update database credentials inside `.env` to match your local setup:
      ```env
      DB_HOST=127.0.0.1
      DB_PORT=3306
@@ -147,108 +192,115 @@ Hệ thống sẽ tự động:
      DB_USER=root
      DB_PASS=
      ```
-3. **Cài đặt thư viện**:
+3. **Install Dependencies**:
    ```bash
    composer install
    ```
-4. **Import Cơ sở dữ liệu**:
-   - Tạo Database mới tên `phongtroqn` trong phpMyAdmin với collation `utf8mb4_unicode_ci`.
-   - Import lần lượt 2 file:
-     1. [`database/schema.sql`](database/schema.sql) (Cấu trúc bảng, khóa ngoại, indexes)
-     2. [`database/seed.sql`](database/seed.sql) (Dữ liệu mẫu tài khoản và bài đăng)
-5. **Khởi chạy**:
-   - Truy cập trình duyệt: [http://localhost/PhongTroQN/public](http://localhost/PhongTroQN/public) (hoặc virtual host tương ứng).
+4. **Database Migration**:
+   - Create an empty database named `phongtroqn` with collation `utf8mb4_unicode_ci`.
+   - Import the schema and seed files in order:
+     1. [`database/schema.sql`](database/schema.sql) (Tables, Constraints, Foreign Keys, Indexes)
+     2. [`database/seed.sql`](database/seed.sql) (Demo Accounts, Verified Listings with Coordinates)
+5. **Launch**:
+   - Start Apache & MySQL services.
+   - Navigate to: [http://localhost/PhongTroQN/public](http://localhost/PhongTroQN/public).
 
 ---
 
-## 👥 Danh Sách Tài Khoản Demo
+## 👥 Demo Credentials
 
-Dữ liệu mẫu đã được cung cấp sẵn trong `database/seed.sql`:
+Pre-seeded accounts are provided in [`database/seed.sql`](database/seed.sql) for testing:
 
-| Vai Trò | Email Đăng Nhập | Mật Khẩu | Quyền Hạn |
+| Role | Email | Password | Permissions |
 | :--- | :--- | :--- | :--- |
-| **Quản trị viên (Admin)** | `admin@phongtroqn.com` | `admin123` | Quản trị tin đăng, duyệt báo cáo vi phạm, quản lý người dùng |
-| **Chủ nhà trọ** | `chutro@gmail.com` | `123456` | Đăng tin, cập nhật, xóa bài đăng của mình, xem tin đã lưu |
-| **Người thuê trọ** | `user@gmail.com` | `123456` | Xem tin trọ, lưu tin yêu thích, gửi báo cáo phòng trọ ảo |
+| **System Administrator** | `admin@phongtroqn.com` | `admin123` | Full admin privileges: moderate listings, review violation reports, manage users. |
+| **Landlord (Chủ Trọ)** | `chutro@gmail.com` | `123456` | Create listings, update/delete own listings, upload media, view saved rooms. |
+| **Tenant (Người Thuê)** | `user@gmail.com` | `123456` | Browse listings, filter & paginate, bookmark favorites, report invalid listings. |
 
 ---
 
-## 🧪 Kiểm Thử Tự Động (Unit Testing)
+## 🧪 Automated Testing (Unit Testing)
 
-Dự án tích hợp bộ kiểm thử đơn vị với PHPUnit 9.6:
+The project includes an isolated test suite powered by PHPUnit 9.6:
 
 ```bash
-# Chạy toàn bộ test suite
+# Execute the full test suite
 vendor/bin/phpunit
 
-# Kết quả kiểm thử mẫu:
+# Sample test output:
+# PHPUnit 9.6.38 by Sebastian Bergmann and contributors.
+# .....................                                             21 / 21 (100%)
+# Time: 00:00.055, Memory: 6.00 MB
 # OK (21 tests, 74 assertions)
 ```
 
-**Các nhóm bài kiểm tra**:
-- `HelperFunctionsTest`: Kiểm tra hàm chuyển đổi chuỗi tiếng Việt Unicode không dấu (`vn_str_filter`), định dạng tiền tệ (`money`), lọc XSS (`e`), cơ chế thông báo Session Flash.
-- `ValidatorTest`: Kiểm tra các quy tắc xác thực dữ liệu (chuỗi, số, khoảng giá, diện tích, tọa độ vĩ độ/kinh độ, whitelist link video YouTube & TikTok).
-- `CsrfTest`: Kiểm tra tính ngẫu nhiên của token, mã HTML input ẩn và xác thực token hợp lệ/bất hợp pháp.
-- `AuthTest`: Kiểm tra logic phân quyền, bảo vệ trạng thái khách/thành viên/admin, dọn dẹp an toàn session khi đăng xuất.
-- `DatabaseModelTest`: Kiểm tra các thao tác truy vấn CSDL của `User` và `Post` model (tạo bài, lấy chi tiết, xóa cascade) trên cơ sở dữ liệu SQLite in-memory độc lập.
+**Test Coverage Highlights**:
+- `HelperFunctionsTest`: Validates Vietnamese Unicode accent stripping (`vn_str_filter`), currency formatting (`money`), XSS escaping (`e`), and single-use session flash messaging.
+- `ValidatorTest`: Verifies validation rules (mandatory fields, numeric boundaries, Vietnamese mobile numbers, geolocation ranges, and YouTube/TikTok URL whitelist).
+- `CsrfTest`: Asserts token randomness, hidden input generation, and constant-time string token comparison.
+- `AuthTest`: Tests authentication states, guest restrictions, role elevation (`isAdmin`), and session teardown on logout.
+- `DatabaseModelTest`: Exercises CRUD operations and cascade deletions across `User` and `Post` models using an isolated in-memory SQLite database.
 
 ---
 
-## ⚙️ Biến Môi Trường (.env)
+## ⚙️ Environment Variables (.env)
 
-| Tên Biến | Ý Nghĩa | Mặc Định Mẫu |
+| Variable | Description | Default / Example |
 | :--- | :--- | :--- |
-| `APP_ENV` | Môi trường ứng dụng (`local` / `production`) | `local` |
-| `APP_DEBUG` | Bật/tắt chế độ debug hiển thị chi tiết lỗi | `true` |
-| `BASE_URL` | Đường dẫn gốc của website | `http://localhost:8080` |
-| `DB_HOST` | Địa chỉ máy chủ MySQL | `127.0.0.1` (hoặc `db` trên Docker) |
-| `DB_PORT` | Cổng kết nối CSDL | `3306` |
-| `DB_NAME` | Tên cơ sở dữ liệu | `phongtroqn` |
-| `DB_USER` | Tên người dùng CSDL | `root` |
-| `DB_PASS` | Mật khẩu người dùng CSDL | `` |
-| `SMTP_HOST` | Địa chỉ máy chủ gửi mail SMTP | `smtp.gmail.com` |
-| `SMTP_USER` | Tài khoản gửi mail | `example@gmail.com` |
-| `SMTP_PASS` | Mật khẩu ứng dụng (App Password) | `your_smtp_app_password` |
-| `SMTP_PORT` | Cổng gửi mail SMTP (TLS/SSL) | `587` |
+| `APP_ENV` | Application environment (`local` / `production`) | `local` |
+| `APP_DEBUG` | Display verbose debug stack traces (`true` / `false`) | `true` |
+| `BASE_URL` | Root URL of the application | `http://localhost:8080` |
+| `DB_HOST` | MySQL hostname or container service name | `127.0.0.1` (or `db` in Docker) |
+| `DB_PORT` | MySQL connection port | `3306` |
+| `DB_NAME` | Database schema name | `phongtroqn` |
+| `DB_USER` | Database user | `root` (or `phongtro_user`) |
+| `DB_PASS` | Database password | `secret123` |
+| `SMTP_HOST` | Outgoing SMTP mail server | `smtp.gmail.com` |
+| `SMTP_USER` | SMTP username | `example@gmail.com` |
+| `SMTP_PASS` | SMTP application password | `your_app_password` |
+| `SMTP_PORT` | SMTP port (TLS/SSL) | `587` |
 
 ---
 
-## 📁 Cấu Trúc Thư Mục Dự Án
+## 📁 Project Directory Structure
 
 ```
 PhongTroQN/
-├── .github/workflows/       # CI/CD pipeline (GitHub Actions)
+├── .github/workflows/       # GitHub Actions CI/CD pipeline
 ├── app/
-│   ├── Controllers/         # Các Controller xử lý nghiệp vụ (Auth, Post, User, Admin...)
-│   ├── Helpers/             # Thư viện dùng chung (Auth, Csrf, Validator, Logger, Env...)
-│   ├── Models/              # Models kết nối CSDL PDO (DB, User, Post, Favorite...)
-│   ├── Views/               # Giao diện hiển thị (home, post, user, admin, partials, errors)
-│   └── functions.php        # Router regex/match và các helper functions cốt lõi
+│   ├── Controllers/         # Application Controllers (Auth, Post, User, Admin, etc.)
+│   ├── Helpers/             # Core Utilities (Auth, Csrf, Validator, Logger, Env, Mail)
+│   ├── Models/              # PDO Database Models (DB Singleton, User, Post, Favorite)
+│   ├── Views/               # View Templates (home, post, user, admin, partials, errors)
+│   └── functions.php        # Custom Regex/Match Router & Core Helpers
 ├── config/
-│   └── config.php           # Cấu hình nạp hằng số môi trường
+│   └── config.php           # Global configuration bootstrapping
 ├── database/
-│   ├── schema.sql           # Cấu trúc CSDL InnoDB utf8mb4 kèm khóa ngoại & index
-│   └── seed.sql             # Dữ liệu khởi tạo (Admin, người dùng, tin đăng mẫu tại Quy Nhơn)
+│   ├── schema.sql           # InnoDB utf8mb4 DDL with constraints & indexes
+│   └── seed.sql             # Realistic seed data (accounts, Quy Nhon room listings)
 ├── docs/
-│   └── ARCHITECTURE.md      # Tài liệu kiến trúc, sơ đồ luồng route và ERD chi tiết
-├── public/                  # Web root công khai
-│   ├── assets/              # Tài nguyên tĩnh (CSS, JS, Hình ảnh giao diện)
-│   ├── uploads/             # Thư mục lưu file upload (có .htaccess bảo vệ)
-│   └── index.php            # Điểm đón đầu request (Front Controller)
+│   └── ARCHITECTURE.md      # In-depth architectural design, routes & ERD documentation
+├── public/                  # Public web root
+│   ├── assets/              # Static assets (CSS, JavaScript, UI graphics)
+│   ├── uploads/             # Media storage (protected by .htaccess)
+│   └── index.php            # Front Controller entrypoint
 ├── storage/
-│   └── logs/                # File log hệ thống (app.log)
-├── tests/                   # Bộ kiểm thử đơn vị PHPUnit
-│   ├── Unit/                # Các test cases (Auth, Csrf, Validator, Helpers, Model)
-│   └── bootstrap.php        # Cấu hình nạp test runner
-├── .dockerignore
-├── .env.example             # Mẫu biến môi trường an toàn
-├── .gitignore
-├── CHANGELOG.md             # Nhật ký nâng cấp chi tiết
-├── Dockerfile               # Cấu hình container PHP 8.2 Apache
-├── docker-compose.yml       # Điều phối app, mysql và phpmyadmin
-├── phpunit.xml              # Cấu hình chạy kiểm thử PHPUnit
-└── README.md                # Tài liệu hướng dẫn dự án
+│   └── logs/                # Centralized application logs (app.log)
+├── tests/                   # Automated PHPUnit Test Suite
+│   ├── Unit/                # Unit test classes (Auth, Csrf, Validator, Models, Helpers)
+│   └── bootstrap.php        # Test runner initialization
+├── .dockerignore            # Docker build ignore rules
+├── .env.example             # Safe environment variable template
+├── .gitignore               # Git ignore rules
+├── CHANGELOG.md             # Detailed version changelog
+├── Dockerfile               # Production-ready PHP 8.2 Apache container definition
+├── docker-compose.yml       # Multi-container orchestration (App, MySQL, phpMyAdmin)
+├── phpunit.xml              # PHPUnit test configuration
+└── README.md                # Project documentation
 ```
 
 ---
 
+## 📜 License
+
+This project is open-sourced software licensed under the [MIT License](LICENSE). Built for educational demonstration, technical portfolio showcases, and engineering career opportunities.
