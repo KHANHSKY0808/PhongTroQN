@@ -13,7 +13,7 @@ The codebase has undergone comprehensive security hardening, query performance o
 
 ---
 
-## 🌟 Technical Highlights (CV Ready)
+## 🌟 Technical Highlights 
 
 ### 🛡️ Bulletproof Security (Hardened)
 - **Zero-Trust File Upload Pipeline**:
